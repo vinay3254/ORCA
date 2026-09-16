@@ -75,3 +75,49 @@ async def test_get_stormglass_marine_data_falls_back_on_quota_exhausted(monkeypa
 
     res = await stormglass.get_stormglass_marine_data(9.9679, 76.2444)
     assert res.is_cached is True
+
+
+@respx.mock
+async def test_stormglass_moves_to_next_key_when_first_key_quota_exhausted(monkeypatch):
+    monkeypatch.setattr(
+        stormglass, "get_settings", lambda: type("S", (), {"stormglass_api_key": "key-1,key-2"})()
+    )
+    route = respx.get("https://api.stormglass.io/v2/weather/point")
+    route.side_effect = [
+        httpx.Response(402, json={"errors": {"key": "Daily quota exceeded"}}),
+        httpx.Response(
+            200,
+            json={
+                "hours": [_hour(waveHeight={"sg": 0.64}, waterTemperature={"sg": 28.25})],
+                "meta": {"dailyQuota": 10, "requestCount": 1},
+            },
+        ),
+    ]
+
+    res = await stormglass.get_stormglass_marine_data(9.9679, 76.2444)
+
+    assert res.is_cached is False
+    assert res.data["wave_height_m"] == 0.64
+    assert route.calls[0].request.headers["Authorization"] == "key-1"
+    assert route.calls[1].request.headers["Authorization"] == "key-2"
+
+
+@respx.mock
+async def test_stormglass_falls_back_to_cache_when_every_configured_key_is_exhausted(monkeypatch):
+    monkeypatch.setattr(
+        stormglass, "get_settings", lambda: type("S", (), {"stormglass_api_key": "key-1,key-2"})()
+    )
+    respx.get("https://api.stormglass.io/v2/weather/point").mock(
+        return_value=httpx.Response(402, json={"errors": {"key": "Daily quota exceeded"}})
+    )
+
+    res = await stormglass.get_stormglass_marine_data(9.9679, 76.2444)
+
+    assert res.is_cached is True
+
+
+def test_configured_stormglass_keys_splits_and_strips_comma_separated_list(monkeypatch):
+    monkeypatch.setattr(
+        stormglass, "get_settings", lambda: type("S", (), {"stormglass_api_key": " key-1 , key-2,, key-3 "})()
+    )
+    assert stormglass._configured_stormglass_keys() == ["key-1", "key-2", "key-3"]

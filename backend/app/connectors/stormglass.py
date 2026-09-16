@@ -5,14 +5,16 @@ Real marine weather (wave height, swell, wave period, surface current speed,
 water temperature) -- blends several forecast models (Stormglass's own "sg"
 model, NOAA, ECMWF, ICON, DWD, Meteo) per point.
 
-**Free-tier quota is severely limited: verified live at 10 requests/day for
-the whole app**, not per-user (see `meta.dailyQuota` in a real response).
-This connector will realistically only serve live data for roughly the
-first 10 chat queries each calendar day; after that, every call fails over
-to the disclosed cached snapshot exactly like IMD/MOSDAC without a key --
-this is the intended, honest degradation, not a bug to work around with
-request throttling or caching beyond what `fetch_with_fallback` already
-does.
+**Free-tier quota is severely limited: verified live at 10 requests/day per
+key**, not per-user (see `meta.dailyQuota` in a real response). `STORMGLASS_API_KEY`
+may hold one key or several comma-separated keys (e.g. from multiple free-tier
+accounts); `_live_fetch_stormglass` tries each in order and moves to the next
+only on a key-specific failure (401 invalid, 402 quota exhausted, 429 rate
+limited), multiplying the effective daily quota by the number of configured
+keys. Once every configured key is exhausted, the call fails over to the
+disclosed cached snapshot exactly like IMD/MOSDAC without a key -- this is
+the intended, honest degradation, not a bug to work around with request
+throttling or caching beyond what `fetch_with_fallback` already does.
 """
 from pathlib import Path
 from typing import Any
@@ -53,24 +55,38 @@ def _pick_source_value(source_values: dict[str, float] | None) -> float | None:
     return next(iter(source_values.values()), None)
 
 
+# Status codes that mean "this key can't serve this request" -- worth trying
+# the next configured key -- rather than a real outage worth failing fast on.
+_KEY_EXHAUSTED_STATUS_CODES = {401, 402, 429}
+
+
+def _configured_stormglass_keys() -> list[str]:
+    raw = getattr(get_settings(), "stormglass_api_key", "")
+    return [key.strip() for key in raw.split(",") if key.strip()]
+
+
 async def _live_fetch_stormglass(lat: float, lon: float) -> dict:
-    settings = get_settings()
-    api_key = getattr(settings, "stormglass_api_key", "")
-    if not api_key:
+    api_keys = _configured_stormglass_keys()
+    if not api_keys:
         raise ValueError("No Stormglass API key configured; triggering verified fallback")
 
+    params = {
+        "lat": lat,
+        "lng": lon,
+        "params": ",".join(sg_param for _, _, _, sg_param in _PARAM_MAP),
+    }
+    body: dict[str, Any] | None = None
     async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.get(
-            STORMGLASS_BASE_URL,
-            headers={"Authorization": api_key},
-            params={
-                "lat": lat,
-                "lng": lon,
-                "params": ",".join(sg_param for _, _, _, sg_param in _PARAM_MAP),
-            },
-        )
-        resp.raise_for_status()
-        body = resp.json()
+        for api_key in api_keys:
+            try:
+                resp = await client.get(STORMGLASS_BASE_URL, headers={"Authorization": api_key}, params=params)
+                resp.raise_for_status()
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code in _KEY_EXHAUSTED_STATUS_CODES and api_key != api_keys[-1]:
+                    continue
+                raise
+            body = resp.json()
+            break
 
     hours = body.get("hours", [])
     if not hours:
