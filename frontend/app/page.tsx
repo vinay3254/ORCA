@@ -358,7 +358,7 @@ function ChatApp({
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden relative">
         {/* 1. Left Panel: Conversational Intelligence & Chatbox (Slides smoothly to left when workflow opens) */}
         <div
-          className={`h-full border-r border-slate-200/90 flex flex-col min-h-0 bg-slate-50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className={`h-full border-r border-slate-200/90 flex flex-col min-h-0 bg-white transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             workflowOpened
               ? "w-full lg:w-[30%] lg:min-w-[320px]"
               : "w-full lg:w-[48%] lg:min-w-[420px]"
