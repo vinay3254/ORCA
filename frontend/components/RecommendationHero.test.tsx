@@ -186,8 +186,9 @@ describe("RecommendationHero", () => {
       };
       const html = renderToStaticMarkup(<RecommendationHero risk={risk} />);
       expect(html).toContain(lvl);
-      // Card remains clean light surface (bg-white), not flooded
-      expect(html).toContain("bg-white");
+      // Card remains a neutral, theme-aware surface (bg-card), not flooded
+      // with per-risk-level color -- monochrome risk theme is deliberate.
+      expect(html).toContain("bg-card");
     }
   });
 

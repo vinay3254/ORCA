@@ -189,6 +189,7 @@ async def chat(request: ChatRequest, user: dict = Depends(_current_user)):
                     "what_if": state.get("what_if_result"),
                     "evidence": state.get("evidence"),
                     "location": state.get("canonical_location"),
+                    "response_language": state.get("plan", {}).get("response_language"),
                 }
                 db.append_message(
                     request.session_id,

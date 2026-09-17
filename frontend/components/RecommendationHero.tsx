@@ -2,6 +2,7 @@
 "use client";
 
 import React from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Compass, Check } from "lucide-react";
 import {
   RiskAssessment,
@@ -10,6 +11,8 @@ import {
   MarineParameter,
   DataStatus,
 } from "@/lib/types";
+import { STATUS_THEMES } from "@/lib/theme";
+import { springs } from "@/lib/motion";
 
 export interface RecommendationHeroProps {
   risk?: RiskAssessment | null;
@@ -23,83 +26,51 @@ export interface RecommendationHeroProps {
   onRetry?: () => void;
 }
 
-// Strict Apple-style monochrome (Black & White) design tokens
+// Strict Apple-style monochrome (Black & White) design tokens — these use
+// --primary/--secondary rather than raw black/white so HIGH/EXTREME's
+// "black badge" correctly inverts to a white-on-dark badge in dark mode.
 const RISK_THEMES = {
   LOW: {
     label: "LOW",
-    badgeBg: "bg-slate-100",
-    badgeText: "text-slate-800",
-    badgeBorder: "border-slate-300",
-    dot: "bg-slate-400",
-    gauge: "bg-slate-500",
-    accent: "text-slate-700",
-    headline: "text-black",
+    badgeBg: "bg-secondary",
+    badgeText: "text-secondary-foreground",
+    badgeBorder: "border-border",
+    dot: "bg-muted-foreground",
+    gauge: "bg-muted-foreground",
+    accent: "text-foreground/80",
+    headline: "text-foreground",
   },
   MODERATE: {
     label: "MODERATE",
-    badgeBg: "bg-slate-100",
-    badgeText: "text-slate-900",
-    badgeBorder: "border-slate-400",
-    dot: "bg-slate-600",
-    gauge: "bg-slate-700",
-    accent: "text-slate-900",
-    headline: "text-black",
+    badgeBg: "bg-secondary",
+    badgeText: "text-secondary-foreground",
+    badgeBorder: "border-border",
+    dot: "bg-foreground/70",
+    gauge: "bg-foreground/70",
+    accent: "text-foreground",
+    headline: "text-foreground",
   },
   HIGH: {
     label: "HIGH",
-    badgeBg: "bg-black",
-    badgeText: "text-white",
-    badgeBorder: "border-black",
-    dot: "bg-white",
-    gauge: "bg-black",
-    accent: "text-black",
-    headline: "text-black",
+    badgeBg: "bg-primary",
+    badgeText: "text-primary-foreground",
+    badgeBorder: "border-primary",
+    dot: "bg-primary-foreground",
+    gauge: "bg-primary",
+    accent: "text-foreground",
+    headline: "text-foreground",
   },
   EXTREME: {
     label: "EXTREME",
-    badgeBg: "bg-black",
-    badgeText: "text-white",
-    badgeBorder: "border-black",
-    dot: "bg-white",
-    gauge: "bg-black",
-    accent: "text-black",
-    headline: "text-black",
+    badgeBg: "bg-primary",
+    badgeText: "text-primary-foreground",
+    badgeBorder: "border-primary",
+    dot: "bg-primary-foreground",
+    gauge: "bg-primary",
+    accent: "text-foreground",
+    headline: "text-foreground",
   },
 } as const;
-
-const STATUS_THEMES: Record<
-  DataStatus,
-  { label: string; bg: string; text: string; border: string; dot: string }
-> = {
-  LIVE: {
-    label: "LIVE",
-    bg: "bg-black",
-    text: "text-white",
-    border: "border-black",
-    dot: "bg-white",
-  },
-  FORECAST: {
-    label: "FORECAST",
-    bg: "bg-slate-100",
-    text: "text-slate-900",
-    border: "border-slate-300",
-    dot: "bg-slate-700",
-  },
-  CACHED: {
-    label: "CACHED",
-    bg: "bg-slate-50",
-    text: "text-slate-700",
-    border: "border-slate-200",
-    dot: "bg-slate-400",
-  },
-  HISTORICAL: {
-    label: "HISTORICAL",
-    bg: "bg-slate-50",
-    text: "text-slate-500",
-    border: "border-slate-200",
-    dot: "bg-slate-300",
-  },
-};
 
 /**
  * Format timestamp into Apple editorial date/time: e.g. "16 Sep · 06:00"
@@ -298,104 +269,123 @@ export function RecommendationHero({
   error = null,
   onRetry,
 }: RecommendationHeroProps) {
+  const crossfade = {
+    initial: { opacity: 0, y: 8 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -8 },
+    transition: springs.default,
+  };
+
   // ── 1. LOADING SKELETON STATE ─────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div
-        data-testid="recommendation-hero-loading"
-        className="rounded-3xl bg-white border border-slate-200/80 shadow-[0_2px_16px_rgba(0,0,0,0.03)] p-6 sm:p-7 mb-5 transition-all animate-pulse"
-      >
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <div className="h-3.5 w-24 bg-slate-200/80 rounded-full" />
-          <div className="h-5 w-16 bg-slate-200/80 rounded-full" />
-        </div>
-
-        {/* Big Recommendation Headline Skeleton */}
-        <div className="h-8 sm:h-9 w-3/4 bg-slate-200/80 rounded-xl mb-6" />
-
-        {/* Metrics Grid Skeleton */}
-        <div className="grid grid-cols-2 gap-4 pb-5 border-b border-slate-100">
-          <div className="p-3.5 bg-slate-50 rounded-2xl">
-            <div className="h-3 w-16 bg-slate-200 rounded mb-2" />
-            <div className="h-7 w-24 bg-slate-200 rounded" />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="loading"
+          {...crossfade}
+          data-testid="recommendation-hero-loading"
+          className="rounded-3xl bg-card border border-border shadow-[0_2px_16px_rgba(0,0,0,0.03)] p-6 sm:p-7 mb-5 animate-pulse"
+        >
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="h-3.5 w-24 bg-muted rounded-full" />
+            <div className="h-5 w-16 bg-muted rounded-full" />
           </div>
-          <div className="p-3.5 bg-slate-50 rounded-2xl">
-            <div className="h-3 w-20 bg-slate-200 rounded mb-2" />
-            <div className="h-7 w-20 bg-slate-200 rounded" />
+
+          {/* Big Recommendation Headline Skeleton */}
+          <div className="h-8 sm:h-9 w-3/4 bg-muted rounded-xl mb-6" />
+
+          {/* Metrics Grid Skeleton */}
+          <div className="grid grid-cols-2 gap-4 pb-5 border-b border-border">
+            <div className="p-3.5 bg-muted/60 rounded-2xl">
+              <div className="h-3 w-16 bg-muted rounded mb-2" />
+              <div className="h-7 w-24 bg-muted rounded" />
+            </div>
+            <div className="p-3.5 bg-muted/60 rounded-2xl">
+              <div className="h-3 w-20 bg-muted rounded mb-2" />
+              <div className="h-7 w-20 bg-muted rounded" />
+            </div>
           </div>
-        </div>
 
-        {/* Supporting Evidence Skeleton */}
-        <div className="py-4 space-y-2.5 border-b border-slate-100">
-          <div className="h-3 w-40 bg-slate-200/70 rounded mb-3" />
-          <div className="h-3.5 w-56 bg-slate-200/70 rounded" />
-          <div className="h-3.5 w-48 bg-slate-200/70 rounded" />
-          <div className="h-3.5 w-52 bg-slate-200/70 rounded" />
-        </div>
+          {/* Supporting Evidence Skeleton */}
+          <div className="py-4 space-y-2.5 border-b border-border">
+            <div className="h-3 w-40 bg-muted rounded mb-3" />
+            <div className="h-3.5 w-56 bg-muted rounded" />
+            <div className="h-3.5 w-48 bg-muted rounded" />
+            <div className="h-3.5 w-52 bg-muted rounded" />
+          </div>
 
-        {/* Metadata Footer Skeleton */}
-        <div className="pt-4 flex items-center justify-between">
-          <div className="h-3 w-32 bg-slate-200/70 rounded" />
-          <div className="h-5 w-20 bg-slate-200/70 rounded-full" />
-        </div>
-      </div>
+          {/* Metadata Footer Skeleton */}
+          <div className="pt-4 flex items-center justify-between">
+            <div className="h-3 w-32 bg-muted rounded" />
+            <div className="h-5 w-20 bg-muted rounded-full" />
+          </div>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   // ── 2. ERROR STATE ────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div
-        data-testid="recommendation-hero-error"
-        className="rounded-3xl bg-white border border-slate-300 shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6 sm:p-7 mb-5 text-left transition-all"
-      >
-        <div className="flex items-start gap-3.5">
-          <div className="w-10 h-10 rounded-2xl bg-slate-100 text-black flex items-center justify-center shrink-0 text-lg font-bold border border-slate-200">
-            !
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="error"
+          {...crossfade}
+          data-testid="recommendation-hero-error"
+          className="rounded-3xl bg-card border border-border shadow-[0_2px_16px_rgba(0,0,0,0.04)] p-6 sm:p-7 mb-5 text-left"
+        >
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-secondary text-foreground flex items-center justify-center shrink-0 text-lg font-bold border border-border">
+              !
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="text-micro font-semibold uppercase text-muted-foreground">
+                Marine Telemetry Unavailable
+              </span>
+              <h3 className="text-title text-foreground mt-0.5">
+                Could not compute marine risk recommendation
+              </h3>
+              <p className="text-caption text-muted-foreground mt-1">{error}</p>
+              {onRetry && (
+                <button
+                  onClick={onRetry}
+                  className="mt-3.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-xs"
+                >
+                  Retry Analysis
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Marine Telemetry Unavailable
-            </span>
-            <h3 className="text-lg font-bold text-black mt-0.5">
-              Could not compute marine risk recommendation
-            </h3>
-            <p className="text-xs text-slate-600 mt-1 leading-relaxed">{error}</p>
-            {onRetry && (
-              <button
-                onClick={onRetry}
-                className="mt-3.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-black text-white hover:bg-slate-800 transition-colors shadow-xs"
-              >
-                Retry Analysis
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
   // ── 3. POLISHED EMPTY STATE ───────────────────────────────────────────────
   if (!risk) {
     return (
-      <div
-        data-testid="recommendation-hero-empty"
-        className="rounded-3xl bg-white border border-slate-200/80 shadow-[0_2px_16px_rgba(0,0,0,0.03)] p-6 sm:p-7 mb-5 text-center transition-all"
-      >
-        <div className="w-11 h-11 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-3 text-slate-400 shadow-xs">
-          <Compass className="w-5 h-5 text-slate-400" />
-        </div>
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-          Marine Ecosystem Reasoning
-        </span>
-        <h3 className="text-lg font-semibold text-slate-900 mt-1 mb-1.5">
-          Select a coastal coordinate or enter a query
-        </h3>
-        <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-          ORCA synthesizes INCOIS ocean forecasts, IMD meteorological warnings, and
-          ISRO satellite observations into verifiable departure recommendations.
-        </p>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="empty"
+          {...crossfade}
+          data-testid="recommendation-hero-empty"
+          className="rounded-3xl bg-card border border-border shadow-[0_2px_16px_rgba(0,0,0,0.03)] p-6 sm:p-7 mb-5 text-center"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-muted border border-border flex items-center justify-center mx-auto mb-3 text-muted-foreground shadow-xs">
+            <Compass className="w-5 h-5" />
+          </div>
+          <span className="text-micro font-semibold uppercase text-muted-foreground">
+            Marine Ecosystem Reasoning
+          </span>
+          <h3 className="text-title text-foreground mt-1 mb-1.5">
+            Select a coastal coordinate or enter a query
+          </h3>
+          <p className="text-caption text-muted-foreground max-w-md mx-auto">
+            ORCA synthesizes INCOIS ocean forecasts, IMD meteorological warnings, and
+            ISRO satellite observations into verifiable departure recommendations.
+          </p>
+        </motion.div>
+      </AnimatePresence>
     );
   }
 
@@ -442,144 +432,148 @@ export function RecommendationHero({
   const sourcesLabel = activeSources.join(" · ");
 
   return (
-    <div
-      data-testid="recommendation-hero"
-      className="rounded-3xl bg-white border border-slate-200/80 shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-6 sm:p-7 mb-4 transition-all duration-300 text-left font-sans select-text"
-    >
-      {/* ── TOP EYEBROW + RISK PILL ── */}
-      <div className="flex items-center justify-between gap-3 mb-2.5">
-        <span className="text-[11px] font-semibold tracking-wider uppercase text-slate-400">
-          [ Marine Risk ]
-        </span>
-        <div
-          data-testid="risk-badge"
-          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-semibold tracking-wide ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${theme.dot}`} />
-          <span>{theme.label}</span>
-        </div>
-      </div>
-
-      {/* ── PRIMARY RECOMMENDATION (Visually Dominates) ── */}
-      <h2
-        data-testid="primary-recommendation"
-        className="text-2xl sm:text-3xl font-semibold tracking-tight text-slate-900 leading-snug sm:leading-tight mb-5"
+    <AnimatePresence mode="wait">
+      <motion.div
+        key="content"
+        {...crossfade}
+        data-testid="recommendation-hero"
+        className="rounded-3xl bg-card border border-border shadow-[0_2px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-6 sm:p-7 mb-4 transition-shadow duration-300 text-left font-sans select-text"
       >
-        {recommendation}
-      </h2>
-
-      {/* ── METRICS: RISK SCORE & CONFIDENCE ── */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-100">
-        {/* Risk Stat */}
-        <div className="flex flex-col justify-between">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-            Risk Index
+        {/* ── TOP EYEBROW + RISK PILL ── */}
+        <div className="flex items-center justify-between gap-3 mb-2.5">
+          <span className="text-micro font-semibold uppercase text-muted-foreground">
+            [ Marine Risk ]
           </span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span
-              data-testid="risk-score-value"
-              className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-mono"
-            >
-              {risk_score}
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-slate-400">/ 100</span>
-          </div>
-          {/* Subtle micro gauge */}
-          <div className="w-full h-1.5 bg-slate-200/70 rounded-full overflow-hidden mt-2.5">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ease-out ${theme.gauge}`}
-              style={{ width: `${Math.min(100, Math.max(4, risk_score))}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Confidence Stat */}
-        <div className="flex flex-col justify-between border-l border-slate-200/60 pl-3.5 sm:pl-4">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
-            Confidence
-          </span>
-          <div className="flex items-baseline gap-1 mt-1">
-            <span
-              data-testid="confidence-value"
-              className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-mono"
-            >
-              {Math.round(confidence * 100)}%
-            </span>
-          </div>
-          <span className="text-[10px] text-slate-400 mt-2 font-medium tracking-wide inline-flex items-center gap-1">
-            {verification?.is_verified ? (
-              <>
-                Provenance Verified <Check className="w-3 h-3 text-emerald-600" />
-              </>
-            ) : (
-              "Cross-Grounded"
-            )}
-          </span>
-        </div>
-      </div>
-
-      {/* ── DIVIDER ── */}
-      <div className="h-px bg-slate-100 my-5" />
-
-      {/* ── WHY ORCA RECOMMENDS THIS ── */}
-      <div>
-        <h3 className="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-3">
-          Why ORCA recommends this
-        </h3>
-        <ul className="space-y-2 text-sm text-slate-700">
-          {factors.map((factor, idx) => (
-            <li
-              key={idx}
-              className="flex items-baseline gap-2.5 text-xs sm:text-sm leading-relaxed"
-            >
-              <span className="text-slate-300 font-semibold select-none">•</span>
-              <span className="font-medium text-slate-800">{factor.label}</span>
-              <span className="text-slate-400 font-normal">—</span>
-              <span className="font-semibold text-slate-700">{factor.value}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* ── DIVIDER ── */}
-      <div className="h-px bg-slate-100 my-5" />
-
-      {/* ── METADATA FOOTER (Quiet, Apple-style metadata) ── */}
-      <div className="space-y-2 text-xs text-slate-500">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          {/* Location & Time */}
-          <div className="flex items-center gap-2 font-medium text-slate-700">
-            <span data-testid="hero-location" className="font-semibold">
-              {locationLabel}
-            </span>
-            <span className="text-slate-300">·</span>
-            <span data-testid="hero-timestamp" className="text-slate-500">
-              {formattedTime}
-            </span>
-          </div>
-
-          {/* Status Badge: Apple-style quiet pill */}
           <div
-            data-testid="data-status-badge"
-            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${statusTheme.bg} ${statusTheme.text} ${statusTheme.border}`}
+            data-testid="risk-badge"
+            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-xs font-semibold tracking-wide ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}`}
           >
-            <span className={`w-1.5 h-1.5 rounded-full ${statusTheme.dot}`} />
-            <span>{statusTheme.label}</span>
+            <span className={`w-1.5 h-1.5 rounded-full ${theme.dot}`} />
+            <span>{theme.label}</span>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] text-slate-400">
-          {/* Sources Attribution */}
-          <span data-testid="hero-sources" className="tracking-wide">
-            {sourcesLabel}
-          </span>
+        {/* ── PRIMARY RECOMMENDATION (Visually Dominates) ── */}
+        <h2
+          data-testid="primary-recommendation"
+          className="text-display text-foreground mb-5"
+        >
+          {recommendation}
+        </h2>
 
-          {/* Forecast Grid Proximity */}
-          <span data-testid="hero-grid-distance" className="font-mono text-slate-400">
-            {gridLabel}
-          </span>
+        {/* ── METRICS: RISK SCORE & CONFIDENCE ── */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-muted/50 border border-border">
+          {/* Risk Stat */}
+          <div className="flex flex-col justify-between">
+            <span className="text-micro font-medium uppercase text-muted-foreground">
+              Risk Index
+            </span>
+            <div className="flex items-baseline gap-1 mt-1">
+              <span
+                data-testid="risk-score-value"
+                className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-mono"
+              >
+                {risk_score}
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground">/ 100</span>
+            </div>
+            {/* Subtle micro gauge */}
+            <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-2.5">
+              <div
+                className={`h-full rounded-full transition-all duration-700 ease-out ${theme.gauge}`}
+                style={{ width: `${Math.min(100, Math.max(4, risk_score))}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Confidence Stat */}
+          <div className="flex flex-col justify-between border-l border-border pl-3.5 sm:pl-4">
+            <span className="text-micro font-medium uppercase text-muted-foreground">
+              Confidence
+            </span>
+            <div className="flex items-baseline gap-1 mt-1">
+              <span
+                data-testid="confidence-value"
+                className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-mono"
+              >
+                {Math.round(confidence * 100)}%
+              </span>
+            </div>
+            <span className="text-[10px] text-muted-foreground mt-2 font-medium tracking-wide inline-flex items-center gap-1">
+              {verification?.is_verified ? (
+                <>
+                  Provenance Verified <Check className="w-3 h-3 text-foreground/70" />
+                </>
+              ) : (
+                "Cross-Grounded"
+              )}
+            </span>
+          </div>
         </div>
-      </div>
-    </div>
+
+        {/* ── DIVIDER ── */}
+        <div className="h-px bg-border my-5" />
+
+        {/* ── WHY ORCA RECOMMENDS THIS ── */}
+        <div>
+          <h3 className="text-micro font-semibold text-muted-foreground uppercase mb-3">
+            Why ORCA recommends this
+          </h3>
+          <ul className="space-y-2 text-body text-foreground/90">
+            {factors.map((factor, idx) => (
+              <li
+                key={idx}
+                className="flex items-baseline gap-2.5 text-caption"
+              >
+                <span className="text-muted-foreground/60 font-semibold select-none">•</span>
+                <span className="font-medium text-foreground/90">{factor.label}</span>
+                <span className="text-muted-foreground font-normal">—</span>
+                <span className="font-semibold text-foreground/90">{factor.value}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* ── DIVIDER ── */}
+        <div className="h-px bg-border my-5" />
+
+        {/* ── METADATA FOOTER (Quiet, Apple-style metadata) ── */}
+        <div className="space-y-2 text-caption text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {/* Location & Time */}
+            <div className="flex items-center gap-2 font-medium text-foreground/80">
+              <span data-testid="hero-location" className="font-semibold">
+                {locationLabel}
+              </span>
+              <span className="text-muted-foreground/50">·</span>
+              <span data-testid="hero-timestamp" className="text-muted-foreground">
+                {formattedTime}
+              </span>
+            </div>
+
+            {/* Status Badge: Apple-style quiet pill */}
+            <div
+              data-testid="data-status-badge"
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${statusTheme.bg} ${statusTheme.text} ${statusTheme.border}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${statusTheme.dot}`} />
+              <span>{statusTheme.label}</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] text-muted-foreground/70">
+            {/* Sources Attribution */}
+            <span data-testid="hero-sources" className="tracking-wide">
+              {sourcesLabel}
+            </span>
+
+            {/* Forecast Grid Proximity */}
+            <span data-testid="hero-grid-distance" className="font-mono text-muted-foreground/70">
+              {gridLabel}
+            </span>
+          </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

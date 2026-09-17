@@ -46,7 +46,11 @@ export function isSpeechSynthesisSupported(): boolean {
  * transcribed text once recognition ends, or onError if the browser
  * doesn't support it / recognition fails. Returns a stop function.
  */
-export function startListening(onResult: (text: string) => void, onError: () => void): () => void {
+export function startListening(
+  onResult: (text: string) => void,
+  onError: () => void,
+  lang: string = "en-US"
+): () => void {
   const SpeechRecognitionCtor = getSpeechRecognitionCtor();
   if (!SpeechRecognitionCtor) {
     onError();
@@ -54,7 +58,7 @@ export function startListening(onResult: (text: string) => void, onError: () => 
   }
 
   const recognition = new SpeechRecognitionCtor();
-  recognition.lang = "en-US";
+  recognition.lang = lang;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   recognition.onresult = (event) => {
@@ -66,10 +70,14 @@ export function startListening(onResult: (text: string) => void, onError: () => 
   return () => recognition.stop();
 }
 
-export function speak(text: string): void {
+export function speak(text: string, lang?: string): void {
   const synthesis = getGlobal().speechSynthesis as MinimalSpeechSynthesis | undefined;
-  const UtteranceCtor = getGlobal().SpeechSynthesisUtterance as (new (text: string) => unknown) | undefined;
+  const UtteranceCtor = getGlobal().SpeechSynthesisUtterance as
+    | (new (text: string) => { lang: string })
+    | undefined;
   if (!synthesis || !UtteranceCtor) return;
   synthesis.cancel();
-  synthesis.speak(new UtteranceCtor(text));
+  const utterance = new UtteranceCtor(text);
+  if (lang) utterance.lang = lang;
+  synthesis.speak(utterance);
 }

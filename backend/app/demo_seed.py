@@ -52,20 +52,20 @@ def seed_demo_data() -> None:
         "Can I go fishing near Mangaluru tomorrow at 6 AM?",
     )
     turn1_answer = (
-        "### ⚠️ HIGH MARINE RISK: ORCA recommends postponing departure at 06:00\n"
+        "### HIGH MARINE RISK: ORCA recommends postponing departure at 06:00\n"
         "Current and forecast marine conditions off the Mangaluru coast indicate rough, squally sea conditions exceeding operational safety thresholds for motorized and traditional fishing vessels.\n\n"
-        "#### 🌊 Why (Contributing Risk Factors & Physical Hazards):\n"
+        "#### Why (Contributing Risk Factors & Physical Hazards):\n"
         "- **Significant Wave Height:** **2.4 m** (exceeds safety threshold of 2.0 m, +30 risk points)\n"
         "- **Sustained Wind Speed:** **32.5 km/h** from West-Southwest (WSW) (+12 risk points)\n"
         "- **Elevated Swell:** **1.9 m at 8.2s period** creating heavy breaking surf over coastal bar mouths (+10 risk points)\n"
         "- **IMD Coastal Advisory:** Active **Yellow Warning** for squally weather along Dakshina Kannada coast (+10 risk points)\n"
         "- *Capsizing Hazard:* Steep swell breaking over nearshore sandbars poses extreme swamping risk during harbor exit.\n\n"
-        "#### 📊 Transparent Metrics & Grounding:\n"
+        "#### Transparent Metrics & Grounding:\n"
         "- **Risk Score:** **68/100 (HIGH RISK)**\n"
         "- **Evidence Confidence:** **94% Multi-source Consensus**\n"
         "- **Authoritative Sources:** INCOIS Marine Forecast, IMD Coastal Warning, ISRO-MOSDAC Satellite\n"
         "- **Data Status:** FORECAST (validated against regional buoy telemetry)\n\n"
-        "💡 *Recommendation:* Delay departure until late morning (after 10:30 AM), when wind and wave heights subside below alert thresholds."
+        "*Recommendation:* Delay departure until late morning (after 10:30 AM), when wind and wave heights subside below alert thresholds."
     )
     turn1_meta = {
         "risk": {
@@ -163,17 +163,17 @@ def seed_demo_data() -> None:
         "What if I leave at 11 AM instead?",
     )
     turn2_answer = (
-        "### ✅ LOW MARINE RISK: Departure at 11:00 AM is favorable\n"
+        "### LOW MARINE RISK: Departure at 11:00 AM is favorable\n"
         "Shifting your departure from 06:00 AM to 11:00 AM provides a significant safety window as the morning swell dissipates and offshore wind speeds decrease by more than 54%.\n\n"
-        "#### ⏰ What-If Temporal Analysis:\n"
+        "#### What-If Temporal Analysis:\n"
         "- **Risk Score Improvement:** Drops from **68 (HIGH)** down to **22 (LOW)** — a **46-point risk reduction**\n"
         "- **Significant Wave Height:** Eases from **2.4 m** down to **1.3 m** (well within safe operational limits)\n"
         "- **Wind Speed:** Subsides from **32.5 km/h** down to **14.8 km/h**\n"
         "- **IMD Status:** Yellow advisory cleared (returns to Green/Safe)\n\n"
-        "#### 📊 Verified Condition Delta:\n"
+        "#### Verified Condition Delta:\n"
         "- **Original Window (06:00):** Rough breaking sea state, strong offshore chop\n"
         "- **Alternative Window (11:00):** Calm surface, gentle breeze, favorable for pelagic operations\n\n"
-        "💡 *Actionable Verdict:* Approved for departure at 11:00 AM. Favorable return window remains open until 17:30."
+        "*Actionable Verdict:* Approved for departure at 11:00 AM. Favorable return window remains open until 17:30."
     )
     turn2_meta = {
         "risk": {
@@ -255,20 +255,20 @@ def seed_demo_data() -> None:
         "Check marine risk and hazard conditions off Mumbai at 14:00",
     )
     turn3_answer = (
-        "### ⚠️ MODERATE MARINE RISK: Exercise caution offshore off Mumbai\n"
+        "### MODERATE MARINE RISK: Exercise caution offshore off Mumbai\n"
         "Borderline sea state detected off the Mumbai/Konkan coastal sector. Mechanized and decked commercial vessels may operate with vigilance, but small motorized and non-motorized artisanal boats should stay within protected harbor waters.\n\n"
-        "#### 🌊 Why (Contributing Risk Factors & Physical Hazards):\n"
+        "#### Why (Contributing Risk Factors & Physical Hazards):\n"
         "- **Moderate Wave Height:** **1.8 m** (above baseline limit of 1.5 m, +18 risk points)\n"
         "- **Coastal Wind:** **28.0 km/h** with cross-swell chop (+12 risk points)\n"
         "- **Short Steep Wave Period:** **4.9 seconds** creating sharp, irregular coastal chop (+5 risk points)\n"
         "- **Elevated Surface Current:** **0.72 m/s** inducing noticeable lateral vessel drift across navigation lanes (+5 risk points)\n"
         "- **IMD Advisory:** Yellow Watch (Squally weather advisory for Konkan coast, +10 risk points)\n\n"
-        "#### 📊 Transparent Metrics & Grounding:\n"
+        "#### Transparent Metrics & Grounding:\n"
         "- **Risk Score:** **47/100 (MODERATE RISK)**\n"
         "- **Evidence Confidence:** **92% Multi-source Consensus**\n"
         "- **Sources:** INCOIS Marine Model, IMD Coastal Bulletin, Open-Meteo\n"
         "- **Data Status:** FORECAST\n\n"
-        "💡 *Operational Advice:* Avoid nearshore shoals and shallow rocky heads off Colaba and Prongs Reef where swell steepness doubles."
+        "*Operational Advice:* Avoid nearshore shoals and shallow rocky heads off Colaba and Prongs Reef where swell steepness doubles."
     )
     turn3_meta = {
         "risk": {
@@ -355,20 +355,20 @@ def seed_demo_data() -> None:
         "Simulate extreme cyclone hazard and squall alert off Paradip",
     )
     turn4_answer = (
-        "### 🚨 EXTREME MARITIME HAZARD: Operations strictly prohibited off Paradip\n"
+        "### EXTREME MARITIME HAZARD: Operations strictly prohibited off Paradip\n"
         "Extreme meteorological and oceanographic conditions exceed vessel survivability thresholds. Severe tropical cyclonic circulation producing violent storm seas and heavy squalls across the Odisha coastal zone.\n\n"
-        "#### 🌊 Why (Contributing Risk Factors & Physical Hazards):\n"
+        "#### Why (Contributing Risk Factors & Physical Hazards):\n"
         "- **Extreme Wave Height:** **3.8 m** (severely exceeds critical 2.8 m threshold, +40 risk points)\n"
         "- **Gale-Force Coastal Winds:** **58.0 km/h** with gusts exceeding 75 km/h (+30 risk points)\n"
         "- **Active Tropical Cyclone Advisory:** JTWC/GDACS tracked cyclonic system in Bay of Bengal (+35 risk points)\n"
         "- **IMD Coastal Warning:** Active **Red Warning** (Severe Weather Alert - Total Suspension of Maritime Operations, +30 risk points)\n"
         "- **Violent Sea State:** Breaking waves, zero visibility in squalls, and severe storm surge.\n\n"
-        "#### 📊 Transparent Metrics & Grounding:\n"
+        "#### Transparent Metrics & Grounding:\n"
         "- **Risk Score:** **95/100 (EXTREME RISK)**\n"
         "- **Evidence Confidence:** **97% Multi-source Verification**\n"
         "- **Authoritative Sources:** GDACS Cyclone Tracker, IMD Severe Weather Warning, INCOIS High Sea Wave Bulletin\n"
         "- **Data Status:** LIVE & FORECAST\n\n"
-        "🚨 *Mandatory Directive:* Absolute suspension of all fishing, shipping, and port operations. All crafts must remain secured in harbor moorings."
+        "*Mandatory Directive:* Absolute suspension of all fishing, shipping, and port operations. All crafts must remain secured in harbor moorings."
     )
     turn4_meta = {
         "risk": {
@@ -455,20 +455,20 @@ def seed_demo_data() -> None:
         "Where is the nearest safe fishing zone near Kochi?",
     )
     turn5_answer = (
-        "### ✅ LOW MARINE RISK: Conditions are favorable for fishing departure\n"
+        "### LOW MARINE RISK: Conditions are favorable for fishing departure\n"
         "Sea state and meteorological indicators off the Kochi coast are calm and within safe operating limits. Authoritative Potential Fishing Zone (PFZ) advisory retrieved from official INCOIS ocean telemetry and ISRO satellite observations.\n\n"
-        "#### 🌊 Why (Contributing Safety Factors):\n"
+        "#### Why (Contributing Safety Factors):\n"
         "- **Calm Significant Wave Height:** **0.8 m** (well below 1.5 m baseline limit)\n"
         "- **Gentle Coastal Breeze:** **11.5 km/h** from West-Northwest (WNW)\n"
         "- **Swell State:** Mild 0.6 m at 8.5s period, smooth sea surface\n"
         "- **IMD Status:** Normal (Green) — no weather warnings or squall alerts along Kerala coast\n\n"
-        "#### 🐟 Authoritative INCOIS PFZ Advisory:\n"
+        "#### Authoritative INCOIS PFZ Advisory:\n"
         "- **Reference Landing Center:** **Munambam / Kochi Harbor**\n"
         "- **Advisory Bearing:** **252° (West-Southwest)**\n"
         "- **Distance Offshore:** **19.4 km (10.5 Nautical Miles)**\n"
         "- **Target Depth Band:** **32 – 38 meters**\n"
         "- **Oceanographic Front:** Thermal SST front at **28.1°C** and high chlorophyll primary productivity bloom (**1.92 mg/m³**)\n\n"
-        "#### 📊 Transparent Metrics & Grounding:\n"
+        "#### Transparent Metrics & Grounding:\n"
         "- **Risk Score:** **16/100 (LOW RISK)**\n"
         "- **Evidence Confidence:** **96% Multi-source Verification Consensus**\n"
         "- **Authoritative Sources:** INCOIS PFZ Bulletin, ISRO OCM-3 Satellite, IMD Coastal Station"

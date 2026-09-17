@@ -21,9 +21,9 @@ export function AgentWorkflowPanel({
   const [viewMode, setViewMode] = useState<"graph" | "trace">("graph");
 
   return (
-    <div className="h-full flex flex-col min-h-0 bg-slate-50/50 border-r border-slate-200/90">
+    <div className="h-full flex flex-col min-h-0 bg-slate-50 border-r border-slate-200/90">
       {/* View Switcher Header (Light UI Theme matching ORCA workspace) */}
-      <div className="px-3.5 py-2.5 bg-white/95 backdrop-blur-md border-b border-slate-200/90 flex items-center justify-between text-xs shrink-0 z-10 shadow-2xs">
+      <div className="px-3.5 py-2.5 bg-white border-b border-slate-200/90 flex items-center justify-between text-xs shrink-0 z-10 shadow-2xs">
         <div className="flex items-center gap-2">
           <span
             className={`w-2 h-2 rounded-full ${
@@ -85,11 +85,11 @@ export function AgentWorkflowPanel({
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 min-h-0 relative overflow-hidden bg-slate-50/60">
+      <div className="flex-1 min-h-0 relative overflow-hidden bg-slate-50">
         {viewMode === "graph" ? (
           <WorkflowGraph trace={trace} isStreaming={isStreaming} />
         ) : (
-          <div className="h-full overflow-y-auto bg-slate-50/40">
+          <div className="h-full overflow-y-auto bg-slate-50">
             <ReasoningTrace trace={trace} isStreaming={isStreaming} />
           </div>
         )}

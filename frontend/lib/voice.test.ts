@@ -51,6 +51,50 @@ describe("startListening", () => {
 
     expect(onResult).toHaveBeenCalledWith("is it safe");
   });
+
+  it("defaults recognition language to en-US when no lang is given", () => {
+    const instances: { lang: string }[] = [];
+    class FakeRecognition {
+      lang = "";
+      interimResults = false;
+      maxAlternatives = 1;
+      onresult: ((e: unknown) => void) | null = null;
+      onerror: (() => void) | null = null;
+      onend: (() => void) | null = null;
+      constructor() {
+        instances.push(this);
+      }
+      start() {}
+      stop() {}
+    }
+    vi.stubGlobal("webkitSpeechRecognition", FakeRecognition);
+
+    startListening(vi.fn(), vi.fn());
+
+    expect(instances[0]?.lang).toBe("en-US");
+  });
+
+  it("uses the given BCP-47 language for recognition when provided", () => {
+    const instances: { lang: string }[] = [];
+    class FakeRecognition {
+      lang = "";
+      interimResults = false;
+      maxAlternatives = 1;
+      onresult: ((e: unknown) => void) | null = null;
+      onerror: (() => void) | null = null;
+      onend: (() => void) | null = null;
+      constructor() {
+        instances.push(this);
+      }
+      start() {}
+      stop() {}
+    }
+    vi.stubGlobal("webkitSpeechRecognition", FakeRecognition);
+
+    startListening(vi.fn(), vi.fn(), "hi-IN");
+
+    expect(instances[0]?.lang).toBe("hi-IN");
+  });
 });
 
 describe("speak", () => {
@@ -77,5 +121,22 @@ describe("speak", () => {
 
     expect(cancel).toHaveBeenCalledOnce();
     expect(speakFn).toHaveBeenCalledOnce();
+  });
+
+  it("sets the utterance language when a lang is given", () => {
+    vi.stubGlobal("speechSynthesis", { cancel: vi.fn(), speak: vi.fn() });
+    let capturedLang: string | undefined;
+    class FakeUtterance {
+      lang = "";
+      constructor(public text: string) {}
+    }
+    vi.stubGlobal("SpeechSynthesisUtterance", FakeUtterance);
+
+    const synthesis = { cancel: vi.fn(), speak: vi.fn((u: FakeUtterance) => (capturedLang = u.lang)) };
+    vi.stubGlobal("speechSynthesis", synthesis);
+
+    speak("नमस्ते", "hi-IN");
+
+    expect(capturedLang).toBe("hi-IN");
   });
 });

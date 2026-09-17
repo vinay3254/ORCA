@@ -131,7 +131,7 @@ export function ReasoningTrace({
 
   if (trace.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center text-slate-500 bg-slate-50/50">
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center text-slate-500 bg-slate-50">
         <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 shadow-2xs flex items-center justify-center mb-3">
           <Cpu className="w-5 h-5 text-slate-400" />
         </div>
@@ -146,7 +146,7 @@ export function ReasoningTrace({
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-50/40">
+    <div className="flex flex-col h-full bg-slate-50">
       {/* ── TRACE PANEL HEADER ── */}
       <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 shadow-2xs">
         <div className="flex items-center gap-2">

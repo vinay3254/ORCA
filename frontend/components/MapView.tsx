@@ -221,7 +221,7 @@ export function MapView({
       {/* ── FLOATING HUD LOCATION CONFIRMATION CARD (Apple HIG Style) ── */}
       <div className="absolute bottom-3 left-3 z-[1000] pointer-events-auto">
         {lat != null && lon != null ? (
-          <div className="px-3.5 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.08)] flex items-center gap-3 text-xs max-w-sm">
+          <div className="px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.08)] flex items-center gap-3 text-xs max-w-sm">
             <div className="w-7 h-7 rounded-xl bg-sky-50 border border-sky-200 text-sky-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
               <MapPin className="w-3.5 h-3.5" />
             </div>
@@ -235,7 +235,7 @@ export function MapView({
             </div>
           </div>
         ) : (
-          <div className="px-3 py-2 rounded-2xl bg-white/90 backdrop-blur-md border border-slate-200/80 shadow-xs flex items-center gap-2 text-xs text-slate-600">
+          <div className="px-3 py-2 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-center gap-2 text-xs text-slate-600">
             <span className="w-2 h-2 rounded-full bg-slate-400" />
             <span className="font-medium text-[11px]">
               Pan/zoom or ask about any coastal sector

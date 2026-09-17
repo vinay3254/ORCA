@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 from httpx import AsyncClient, ASGITransport
 from app import auth, db
@@ -12,7 +13,11 @@ class FakeGraph:
             sources=["test"], fetched_at=datetime.now(timezone.utc), is_cached=False,
         )
         yield {"trace": [trace_entry]}
-        yield {"trace": [trace_entry], "final_answer": "It is safe to go out."}
+        yield {
+            "trace": [trace_entry],
+            "final_answer": "It is safe to go out.",
+            "plan": {"response_language": "Hindi"},
+        }
 
 
 class FakeGraphWithGeospatial:
@@ -51,6 +56,30 @@ async def test_chat_endpoint_streams_trace_then_answer(monkeypatch, tmp_path):
     assert "It is safe to go out." in body
 
 
+async def test_chat_endpoint_answer_event_includes_response_language(monkeypatch, tmp_path):
+    monkeypatch.setattr(db, "DB_PATH", tmp_path / "test.db")
+    db.init_db()
+    monkeypatch.setattr(main_module, "build_graph", lambda client: FakeGraph())
+    monkeypatch.setattr(main_module, "get_llm_client", lambda: object())
+
+    transport = ASGITransport(app=main_module.app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        async with client.stream(
+            "POST", "/chat", json={"session_id": "s7", "message": "kya safar surakshit hai?"},
+            headers=_auth_headers(),
+        ) as response:
+            body = ""
+            async for chunk in response.aiter_text():
+                body += chunk
+
+    answer_event = [line for line in body.split("\n\n") if line.startswith("event: answer")][0]
+    payload = json.loads(answer_event.split("data: ", 1)[1])
+    assert payload["response_language"] == "Hindi"
+
+    history = db.get_history("s7")
+    assert history[-1]["response_language"] == "Hindi"
+
+
 async def test_chat_endpoint_persists_user_message_and_answer(monkeypatch, tmp_path):
     monkeypatch.setattr(db, "DB_PATH", tmp_path / "test.db")
     db.init_db()
@@ -68,7 +97,7 @@ async def test_chat_endpoint_persists_user_message_and_answer(monkeypatch, tmp_p
 
     assert db.get_history("s2") == [
         {"role": "user", "content": "is it safe?"},
-        {"role": "assistant", "content": "It is safe to go out."},
+        {"role": "assistant", "content": "It is safe to go out.", "response_language": "Hindi"},
     ]
 
 

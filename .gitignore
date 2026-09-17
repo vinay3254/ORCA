@@ -26,3 +26,9 @@ out/
 
 # OS
 .DS_Store
+
+# Logs
+*.log
+
+# Claude local config
+.claude/

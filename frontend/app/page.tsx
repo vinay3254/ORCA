@@ -192,6 +192,7 @@ function ChatApp({
               evidence: event.data.evidence,
               location: event.data.location,
               message_type: event.data.risk ? "answer" : undefined,
+              response_language: event.data.response_language,
             },
           ]);
         }
@@ -220,9 +221,9 @@ function ChatApp({
     : undefined;
 
   return (
-    <main className="flex flex-col h-screen bg-slate-100/70 text-slate-900 font-sans overflow-hidden">
+    <main className="flex flex-col h-screen bg-slate-100 text-slate-900 font-sans overflow-hidden">
       {/* ── TOP PLATFORM NAVIGATION & STATUS BAR (Clean Apple HIG Design) ── */}
-      <header className="sticky top-0 z-30 px-4 sm:px-6 py-2.5 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-[0_1px_4px_rgba(0,0,0,0.03)] shrink-0 flex flex-wrap items-center justify-between gap-3">
+      <header className="sticky top-0 z-30 px-4 sm:px-6 py-2.5 bg-white border-b border-slate-200/80 shadow-[0_1px_4px_rgba(0,0,0,0.03)] shrink-0 flex flex-wrap items-center justify-between gap-3">
         {/* Left Section: Branding & User Session Group */}
         <div className="flex items-center gap-3.5 min-w-0">
           {/* Brand Mark */}
@@ -357,7 +358,7 @@ function ChatApp({
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden relative">
         {/* 1. Left Panel: Conversational Intelligence & Chatbox (Slides smoothly to left when workflow opens) */}
         <div
-          className={`h-full border-r border-slate-200/90 flex flex-col min-h-0 bg-slate-50/50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className={`h-full border-r border-slate-200/90 flex flex-col min-h-0 bg-slate-50 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             workflowOpened
               ? "w-full lg:w-[30%] lg:min-w-[320px]"
               : "w-full lg:w-[48%] lg:min-w-[420px]"
@@ -388,7 +389,7 @@ function ChatApp({
 
         {/* 3. Right Panel: Ocean Map & Marine Sectors (Slides smoothly to right when workflow opens) */}
         <div className="flex-1 h-full flex flex-col min-h-0 bg-white transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
-          <div className="px-3.5 py-2 bg-white/95 backdrop-blur-md border-b border-slate-200/90 flex items-center justify-between text-xs z-10 shadow-2xs shrink-0">
+          <div className="px-3.5 py-2 bg-white border-b border-slate-200/90 flex items-center justify-between text-xs z-10 shadow-2xs shrink-0">
             <div className="flex items-center gap-2">
               <Compass className="w-3.5 h-3.5 text-slate-700" />
               <span className="font-bold text-slate-800 tracking-tight">

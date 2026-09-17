@@ -47,6 +47,54 @@ async def test_graph_runs_full_pipeline_when_location_present(monkeypatch):
     assert result["final_answer"] == "It is safe to go out."
 
 
+async def test_graph_prefers_explicit_place_name_over_stale_session_location(monkeypatch):
+    """Regression test: once a session has resolved a location (e.g. Mangaluru),
+    the frontend keeps sending those coordinates back as `location` on every
+    follow-up message (frontend/lib/chatClient.ts). If the user's new message
+    names a different place ("Mumbai"), the planner correctly extracts
+    place_name="Mumbai", but geospatial_node checked state["location"] first
+    and silently resolved the stale coordinates instead of the named place --
+    so a follow-up asking about Mumbai kept returning the Mangaluru report."""
+    monkeypatch.setattr(
+        graph_module, "create_plan",
+        AsyncMock(return_value={
+            "intent": "check safety", "place_name": "Mumbai",
+            "agents": ["weather", "risk"], "response_language": "English",
+        }),
+    )
+    geospatial_mock = AsyncMock(
+        return_value=({"lat": 18.9, "lon": 72.8, "resolved_name": "Mumbai Coastal Sector"}, _trace("geospatial"))
+    )
+    monkeypatch.setattr(graph_module, "run_geospatial_agent", geospatial_mock)
+    monkeypatch.setattr(
+        graph_module, "run_weather_agent",
+        AsyncMock(return_value=({"wave_height_m": 1.0, "wind_speed_kmh": 10.0}, _trace("weather"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_risk_agent",
+        AsyncMock(return_value=({"verdict": "safe", "reasons": []}, _trace("risk"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_ocean_analytics_agent",
+        AsyncMock(return_value=({"pfz_likelihood": "moderate"}, _trace("ocean_analytics"))),
+    )
+    monkeypatch.setattr(graph_module, "synthesize_answer", AsyncMock(return_value="Report for Mumbai."))
+
+    compiled = graph_module.build_graph(client=object())
+    # Simulates the frontend sending back the previously-resolved Mangaluru
+    # coordinates alongside a new message that names a different place.
+    stale_location = {"latitude": 12.91, "longitude": 74.85, "source": "MANUAL"}
+    result = await compiled.ainvoke({
+        "message": "give me a report for Mumbai",
+        "history": [],
+        "location": stale_location,
+    })
+
+    geospatial_mock.assert_awaited_once_with(place_name="Mumbai")
+    assert result["lat"] == 18.9
+    assert result["lon"] == 72.8
+
+
 async def test_graph_asks_for_location_when_none_given(monkeypatch):
     monkeypatch.setattr(
         graph_module, "create_plan",

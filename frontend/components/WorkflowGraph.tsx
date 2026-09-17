@@ -12,13 +12,6 @@ import {
   FileText,
   Navigation,
   CheckCircle2,
-  Shield,
-  Globe,
-  AlertTriangle,
-  Zap,
-  Radio,
-  TrendingUp,
-  Anchor,
   X,
   Maximize2,
   Plus,
@@ -39,9 +32,8 @@ interface WorkflowNode {
   y: number;
   width: number;
   height: number;
-  type: "user" | "planner" | "agent" | "connector" | "output";
+  type: "user" | "planner" | "agent" | "output";
   agentKey?: string;
-  connectorName?: string;
   themeColor: "red" | "green" | "amber";
 }
 
@@ -66,37 +58,27 @@ function renderNodeIcon(id: string) {
       return <Navigation className={`${cls} text-amber-600`} />;
     case "answer_trace":
       return <CheckCircle2 className={`${cls} text-emerald-600`} />;
-    case "osm_geocoding":
-      return <MapPin className={`${cls} text-slate-600`} />;
-    case "overpass_mpa":
-      return <Shield className={`${cls} text-slate-600`} />;
-    case "incois_osf":
-      return <Waves className={`${cls} text-slate-600`} />;
-    case "open_meteo":
-      return <Globe className={`${cls} text-slate-600`} />;
-    case "imd_alerts":
-      return <AlertTriangle className={`${cls} text-slate-600`} />;
-    case "gdacs_storm":
-      return <Zap className={`${cls} text-slate-600`} />;
-    case "isro_mosdac":
-      return <Radio className={`${cls} text-slate-600`} />;
-    case "noaa_sst":
-      return <TrendingUp className={`${cls} text-slate-600`} />;
-    case "searoute_net":
-      return <Anchor className={`${cls} text-slate-600`} />;
     default:
       return <FileText className={cls} />;
   }
 }
 
-// Canvas coordinate space: 700 x 860
+// Canvas coordinate space: mirrors the real LangGraph pipeline in graph.py --
+// only nodes that actually exist in the graph are shown here. Per-agent data
+// sources (INCOIS, IMD, ISRO-MOSDAC, etc.) are implementation detail *within*
+// a node, not separate graph nodes -- they surface in the node detail drawer
+// (click a node) via its trace entry's "sources" list instead of cluttering
+// the canvas.
+const SPINE_X = 260;
+const ROUTE_X = 470;
+
 const NODES: WorkflowNode[] = [
   // ── 1. ENTRY: USER MESSAGE ──
   {
     id: "user_message",
     label: "User message",
     sublabel: "Natural Language Query",
-    x: 350,
+    x: SPINE_X,
     y: 48,
     width: 170,
     height: 44,
@@ -109,7 +91,7 @@ const NODES: WorkflowNode[] = [
     id: "planner",
     label: "planner",
     sublabel: "Goal & Branch Intent",
-    x: 350,
+    x: SPINE_X,
     y: 140,
     width: 170,
     height: 44,
@@ -123,7 +105,7 @@ const NODES: WorkflowNode[] = [
     id: "geospatial",
     label: "geospatial",
     sublabel: "Sector & Coordinates",
-    x: 350,
+    x: SPINE_X,
     y: 245,
     width: 170,
     height: 44,
@@ -135,7 +117,7 @@ const NODES: WorkflowNode[] = [
     id: "weather",
     label: "weather",
     sublabel: "MetOcean Wave & Wind",
-    x: 350,
+    x: SPINE_X,
     y: 350,
     width: 170,
     height: 44,
@@ -147,7 +129,7 @@ const NODES: WorkflowNode[] = [
     id: "risk",
     label: "risk",
     sublabel: "Safety & Hazard Scoring",
-    x: 350,
+    x: SPINE_X,
     y: 455,
     width: 170,
     height: 44,
@@ -159,7 +141,7 @@ const NODES: WorkflowNode[] = [
     id: "ocean_analytics",
     label: "ocean_analytics",
     sublabel: "SST & Chlorophyll-a",
-    x: 350,
+    x: SPINE_X,
     y: 560,
     width: 180,
     height: 44,
@@ -171,7 +153,7 @@ const NODES: WorkflowNode[] = [
     id: "reporting",
     label: "reporting",
     sublabel: "Advisory Synthesis",
-    x: 350,
+    x: SPINE_X,
     y: 675,
     width: 170,
     height: 44,
@@ -185,7 +167,7 @@ const NODES: WorkflowNode[] = [
     id: "route",
     label: "route",
     sublabel: "Corridor & Detour Scan",
-    x: 570,
+    x: ROUTE_X,
     y: 400,
     width: 170,
     height: 44,
@@ -199,130 +181,11 @@ const NODES: WorkflowNode[] = [
     id: "answer_trace",
     label: "Answer + trace",
     sublabel: "Verified Marine Advisory",
-    x: 350,
+    x: SPINE_X,
     y: 785,
     width: 180,
     height: 44,
     type: "output",
-    themeColor: "green",
-  },
-
-  // ── 6. TELEMETRY CONNECTORS (LEAVES) ──
-  // Geospatial leaves
-  {
-    id: "osm_geocoding",
-    label: "OSM Nominatim",
-    sublabel: "Bathymetry Grid",
-    x: 120,
-    y: 225,
-    width: 148,
-    height: 38,
-    type: "connector",
-    connectorName: "OSM/Nominatim",
-    themeColor: "green",
-  },
-  {
-    id: "overpass_mpa",
-    label: "Overpass MPA",
-    sublabel: "Protected Zones",
-    x: 120,
-    y: 270,
-    width: 148,
-    height: 38,
-    type: "connector",
-    connectorName: "overpass-osm-protected-areas",
-    themeColor: "green",
-  },
-
-  // Weather leaves
-  {
-    id: "incois_osf",
-    label: "INCOIS OSF & PFZ",
-    sublabel: "Ocean State",
-    x: 120,
-    y: 330,
-    width: 148,
-    height: 38,
-    type: "connector",
-    connectorName: "INCOIS",
-    themeColor: "green",
-  },
-  {
-    id: "open_meteo",
-    label: "Open-Meteo",
-    sublabel: "Swell & Waves",
-    x: 120,
-    y: 375,
-    width: 148,
-    height: 38,
-    type: "connector",
-    connectorName: "open-meteo-marine",
-    themeColor: "green",
-  },
-
-  // Risk leaves
-  {
-    id: "imd_alerts",
-    label: "IMD Coastal",
-    sublabel: "Cyclone Watch",
-    x: 120,
-    y: 435,
-    width: 148,
-    height: 38,
-    type: "connector",
-    connectorName: "IMD",
-    themeColor: "green",
-  },
-  {
-    id: "gdacs_storm",
-    label: "GDACS / Blitz",
-    sublabel: "Lightning Feeds",
-    x: 120,
-    y: 480,
-    width: 148,
-    height: 38,
-    type: "connector",
-    connectorName: "gdacs-cyclone-tracker",
-    themeColor: "green",
-  },
-
-  // Ocean leaves
-  {
-    id: "isro_mosdac",
-    label: "ISRO-MOSDAC",
-    sublabel: "Satellite Telemetry",
-    x: 570,
-    y: 540,
-    width: 148,
-    height: 38,
-    type: "connector",
-    connectorName: "ISRO-MOSDAC",
-    themeColor: "green",
-  },
-  {
-    id: "noaa_sst",
-    label: "NOAA ERDDAP",
-    sublabel: "7-Day SST Trend",
-    x: 570,
-    y: 585,
-    width: 148,
-    height: 38,
-    type: "connector",
-    connectorName: "noaa-erddap-sst",
-    themeColor: "green",
-  },
-
-  // Route leaves
-  {
-    id: "searoute_net",
-    label: "Searoute Net",
-    sublabel: "Waypoints",
-    x: 570,
-    y: 460,
-    width: 148,
-    height: 38,
-    type: "connector",
-    connectorName: "searoute-maritime-network",
     themeColor: "green",
   },
 ];
@@ -356,7 +219,7 @@ const EDGES: WorkflowEdge[] = [
     branch: "two_locations",
     agentKey: "route",
     color: "#d97706",
-    customPath: "M 432 140 C 530 140, 570 240, 570 379",
+    customPath: "M 345 140 C 440 140, 470 240, 470 378",
   },
   {
     id: "e-route-reporting",
@@ -364,7 +227,7 @@ const EDGES: WorkflowEdge[] = [
     to: "reporting",
     agentKey: "reporting",
     color: "#d97706",
-    customPath: "M 570 421 C 570 540, 480 675, 432 675",
+    customPath: "M 470 422 C 470 540, 390 675, 345 675",
   },
 
   // Planner Branch 3: "no location" (Bypass around the left straight to reporting)
@@ -375,22 +238,11 @@ const EDGES: WorkflowEdge[] = [
     branch: "no_location",
     agentKey: "reporting",
     color: "#64748b",
-    customPath: "M 268 140 C 35 140, 35 675, 268 675",
+    customPath: "M 175 140 C 60 140, 60 675, 175 675",
   },
 
   // Reporting to Terminal
   { id: "e-reporting-terminal", from: "reporting", to: "answer_trace", agentKey: "reporting", color: "#059669" },
-
-  // Telemetry leaf edges
-  { id: "e-geo-osm", from: "geospatial", to: "osm_geocoding", agentKey: "geospatial", color: "#059669" },
-  { id: "e-geo-mpa", from: "geospatial", to: "overpass_mpa", agentKey: "geospatial", color: "#059669" },
-  { id: "e-weather-incois", from: "weather", to: "incois_osf", agentKey: "weather", color: "#059669" },
-  { id: "e-weather-meteo", from: "weather", to: "open_meteo", agentKey: "weather", color: "#059669" },
-  { id: "e-risk-imd", from: "risk", to: "imd_alerts", agentKey: "risk", color: "#059669" },
-  { id: "e-risk-gdacs", from: "risk", to: "gdacs_storm", agentKey: "risk", color: "#059669" },
-  { id: "e-ocean-isro", from: "ocean_analytics", to: "isro_mosdac", agentKey: "ocean_analytics", color: "#059669" },
-  { id: "e-ocean-noaa", from: "ocean_analytics", to: "noaa_sst", agentKey: "ocean_analytics", color: "#059669" },
-  { id: "e-route-searoute", from: "route", to: "searoute_net", agentKey: "route", color: "#d97706" },
 ];
 
 export function WorkflowGraph({ trace, isStreaming = false }: WorkflowGraphProps) {
@@ -468,27 +320,6 @@ export function WorkflowGraph({ trace, isStreaming = false }: WorkflowGraphProps
   // Generate smooth straight or cubic bezier curves between nodes
   function getEdgePath(edge: WorkflowEdge, from: WorkflowNode, to: WorkflowNode): string {
     if (edge.customPath) return edge.customPath;
-
-    // Telemetry leaf connectors (horizontal from agent edge to leaf edge)
-    if (to.type === "connector") {
-      if (to.x < from.x) {
-        // Left side connector
-        const startX = from.x - from.width / 2;
-        const startY = from.y;
-        const endX = to.x + to.width / 2;
-        const endY = to.y;
-        const curvature = Math.abs(startX - endX) * 0.45;
-        return `M ${startX} ${startY} C ${startX - curvature} ${startY}, ${endX + curvature} ${endY}, ${endX} ${endY}`;
-      } else {
-        // Right side connector
-        const startX = from.x + from.width / 2;
-        const startY = from.y;
-        const endX = to.x - to.width / 2;
-        const endY = to.y;
-        const curvature = Math.abs(endX - startX) * 0.45;
-        return `M ${startX} ${startY} C ${startX + curvature} ${startY}, ${endX - curvature} ${endY}, ${endX} ${endY}`;
-      }
-    }
 
     // Vertical spine connection (top edge to bottom edge)
     const startX = from.x;
@@ -569,21 +400,6 @@ export function WorkflowGraph({ trace, isStreaming = false }: WorkflowGraphProps
       if (executedAgents.has(node.agentKey)) return "completed";
       return "idle";
     }
-    if (node.connectorName) {
-      const isCited = trace.some((t) =>
-        t.sources?.some((s) => s.toLowerCase().includes(node.connectorName!.toLowerCase()))
-      );
-      if (isCited) return "completed";
-
-      const parentEdge = EDGES.find((e) => e.to === node.id);
-      if (parentEdge?.agentKey && executedAgents.has(parentEdge.agentKey)) {
-        return "completed";
-      }
-      if (parentEdge?.agentKey && activeAgent === parentEdge.agentKey) {
-        return "active";
-      }
-      return "idle";
-    }
     return "idle";
   }
 
@@ -592,14 +408,14 @@ export function WorkflowGraph({ trace, isStreaming = false }: WorkflowGraphProps
     : null;
 
   return (
-    <div className="relative w-full h-full bg-slate-50/70 overflow-hidden flex flex-col select-none">
+    <div className="relative w-full h-full bg-slate-50 overflow-hidden flex flex-col select-none">
       {/* Test / accessibility status without eating vertical canvas space */}
       <span className="sr-only" data-testid="graph-status">
         {effectiveStreaming ? "ACTIVE DISPATCH" : isQueryActive ? "CONVERGED" : "IDLE"}
       </span>
 
       {/* Main Canvas Area - fills 100% of panel height */}
-      <div className="relative flex-1 w-full h-full overflow-hidden flex items-center justify-center p-2 bg-slate-50/50">
+      <div className="relative flex-1 w-full h-full overflow-hidden flex items-center justify-center p-2 bg-slate-50">
         {/* Subtle Canvas Dot Grid matching UI light theme */}
         <div
           className="absolute inset-0 pointer-events-none opacity-40"
@@ -616,7 +432,7 @@ export function WorkflowGraph({ trace, isStreaming = false }: WorkflowGraphProps
           style={{ transform: `scale(${zoom})` }}
         >
           <svg
-            viewBox="12 25 648 785"
+            viewBox="0 15 600 805"
             className="w-full h-full object-contain overflow-visible"
             preserveAspectRatio="xMidYMid meet"
           >
@@ -630,20 +446,20 @@ export function WorkflowGraph({ trace, isStreaming = false }: WorkflowGraphProps
             {/* ── BRANCH DECISION LABELS (From user's reference diagram, light theme) ── */}
             <g className="select-none pointer-events-none">
               {/* "one location" label on central spine */}
-              <rect x="298" y="180" width="104" height="24" rx="6" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
-              <text x="350" y="196" fill="#334155" fontSize="10.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
+              <rect x="208" y="180" width="104" height="24" rx="6" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
+              <text x="260" y="196" fill="#334155" fontSize="10.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
                 one location
               </text>
 
               {/* "two locations" label on right detour branch */}
-              <rect x="486" y="240" width="110" height="24" rx="6" fill="#fffbeb" stroke="#fde68a" strokeWidth="1" />
-              <text x="541" y="256" fill="#b45309" fontSize="10.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
+              <rect x="396" y="228" width="110" height="24" rx="6" fill="#fffbeb" stroke="#fde68a" strokeWidth="1" />
+              <text x="451" y="244" fill="#b45309" fontSize="10.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
                 two locations
               </text>
 
               {/* "no location" label on left bypass branch */}
-              <rect x="20" y="390" width="100" height="24" rx="6" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
-              <text x="70" y="406" fill="#475569" fontSize="10.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
+              <rect x="10" y="390" width="100" height="24" rx="6" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
+              <text x="60" y="406" fill="#475569" fontSize="10.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">
                 no location
               </text>
             </g>
@@ -729,7 +545,7 @@ export function WorkflowGraph({ trace, isStreaming = false }: WorkflowGraphProps
                   <button
                     type="button"
                     onClick={() => setSelectedNode(node)}
-                    className={`group w-full h-full flex items-center justify-between px-2.5 py-1 rounded-xl transition-all duration-300 cursor-pointer text-left bg-white/95 backdrop-blur-md border ${borderStyle} ${activeRing} ${
+                    className={`group w-full h-full flex items-center justify-between px-2.5 py-1 rounded-xl transition-all duration-300 cursor-pointer text-left bg-white border ${borderStyle} ${activeRing} ${
                       isIdle ? "opacity-90" : "opacity-100"
                     } ${isSelected ? "ring-2 ring-slate-800 scale-105" : "hover:scale-[1.02] hover:shadow-md"}`}
                   >
@@ -764,7 +580,7 @@ export function WorkflowGraph({ trace, isStreaming = false }: WorkflowGraphProps
         </div>
 
         {/* ── BOTTOM-LEFT CONTROLS (Light Theme with Lucide icons) ── */}
-        <div className="absolute bottom-3 left-3 z-30 flex flex-col gap-0.5 bg-white/95 backdrop-blur-md p-1 rounded-xl border border-slate-200 shadow-md">
+        <div className="absolute bottom-3 left-3 z-30 flex flex-col gap-0.5 bg-white p-1 rounded-xl border border-slate-200 shadow-md">
           <button
             type="button"
             onClick={() => setZoom((z) => Math.min(z + 0.15, 1.6))}
@@ -793,7 +609,7 @@ export function WorkflowGraph({ trace, isStreaming = false }: WorkflowGraphProps
 
         {/* Selected Node Details Drawer (Light Theme) */}
         {selectedNode && (
-          <div className="absolute bottom-3 right-3 z-30 w-72 max-w-[calc(100%-2rem)] bg-white/95 backdrop-blur-xl border border-slate-200 p-3.5 rounded-2xl shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 text-slate-800">
+          <div className="absolute bottom-3 right-3 z-30 w-72 max-w-[calc(100%-2rem)] bg-white border border-slate-200 p-3.5 rounded-2xl shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 text-slate-800">
             <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 mb-2">
               <div className="flex items-center gap-1.5">
                 <span>{renderNodeIcon(selectedNode.id)}</span>

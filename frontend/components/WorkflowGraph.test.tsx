@@ -44,23 +44,37 @@ describe("WorkflowGraph", () => {
     expect(html).toContain("reporting");
     expect(html).toContain("Answer + trace");
 
-    // Branch decision labels from user's diagram
+    // Branch decision labels from user's reference diagram
     expect(html).toContain("one location");
     expect(html).toContain("two locations");
     expect(html).toContain("no location");
-
-    // Telemetry connectors
-    expect(html).toContain("OSM Nominatim");
-    expect(html).toContain("Overpass MPA");
-    expect(html).toContain("INCOIS OSF &amp; PFZ");
-    expect(html).toContain("Open-Meteo");
-    expect(html).toContain("ISRO-MOSDAC");
-    expect(html).toContain("NOAA ERDDAP");
 
     // Controls
     expect(html).toContain('title="Zoom in"');
     expect(html).toContain('title="Zoom out"');
     expect(html).toContain('title="Fit to view"');
+  });
+
+  it("shows only the real LangGraph pipeline nodes, not per-connector telemetry leaves", () => {
+    // Regression guard: the graph previously rendered a separate node per data
+    // source (INCOIS, Open-Meteo, ISRO-MOSDAC, ...), none of which are actual
+    // LangGraph nodes -- that content belongs in the node detail drawer's
+    // "Data Sources Consulted" list instead. Keep this list of graph.py's
+    // actual nodes as the only thing rendered on the canvas.
+    const html = renderToStaticMarkup(<WorkflowGraph trace={sampleTrace} />);
+    for (const leafLabel of [
+      "OSM Nominatim",
+      "Overpass MPA",
+      "INCOIS OSF",
+      "Open-Meteo",
+      "IMD Coastal",
+      "GDACS / Blitz",
+      "ISRO-MOSDAC",
+      "NOAA ERDDAP",
+      "Searoute Net",
+    ]) {
+      expect(html).not.toContain(leafLabel);
+    }
   });
 
   it("does not render connecting lines before query execution (idle state requirement)", () => {

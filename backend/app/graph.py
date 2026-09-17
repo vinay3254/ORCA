@@ -76,12 +76,20 @@ async def planner_node(state: GraphState) -> GraphState:
 
 
 async def geospatial_node(state: GraphState) -> GraphState:
+    # An explicit place name in *this turn's* message always wins over a
+    # carried-over `location` -- the frontend resends the last-resolved
+    # coordinates on every follow-up (see frontend/lib/chatClient.ts), so once
+    # a session had resolved e.g. Mangaluru, checking `location` first meant a
+    # later "give me a report for Mumbai" silently kept resolving Mangaluru.
+    # `location` remains the right source when the message doesn't name a
+    # place at all (a bare GPS/map-click query, or a location-less follow-up).
     loc = state.get("location")
-    if loc and "latitude" in loc and "longitude" in loc:
+    place_name = state["plan"]["place_name"]
+    if not _is_real_place(place_name) and loc and "latitude" in loc and "longitude" in loc:
         coords = (float(loc["latitude"]), float(loc["longitude"]))
         output, trace = await run_geospatial_agent(coords=coords, location_metadata=loc)
     else:
-        output, trace = await run_geospatial_agent(place_name=state["plan"]["place_name"])
+        output, trace = await run_geospatial_agent(place_name=place_name)
 
     canonical_loc = {
         "latitude": output["lat"],

@@ -90,6 +90,7 @@ export interface ChatMessage {
   location?: CanonicalLocation | null;
   is_error?: boolean;
   message_type?: "clarification" | "answer" | "error";
+  response_language?: string | null;
 }
 
 export type ChatStreamEvent =
@@ -103,6 +104,7 @@ export type ChatStreamEvent =
         what_if?: WhatIfComparison | null;
         evidence?: MarineParameter[] | null;
         location?: CanonicalLocation | null;
+        response_language?: string | null;
       };
     };
 

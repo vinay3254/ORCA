@@ -310,22 +310,22 @@ class LLMClient:
         lines = []
 
         if route:
-            lines.append("### 🚢 SAFE SHIPPING-LANE MARITIME ROUTE EVALUATED")
+            lines.append("### SAFE SHIPPING-LANE MARITIME ROUTE EVALUATED")
             lines.append("ORCA has analyzed waypoints along the recognized shipping corridor to minimize coastal hazard exposure.")
         elif risk_level == "EXTREME":
-            lines.append(f"### 🚨 EXTREME MARITIME HAZARD: Operations strictly prohibited off {resolved_name}")
+            lines.append(f"### EXTREME MARITIME HAZARD: Operations strictly prohibited off {resolved_name}")
             lines.append(f"Dangerous cyclonic sea state and severe squall conditions off **{resolved_name}** exceed survivability thresholds for all vessels.")
         elif risk_level == "HIGH":
-            lines.append(f"### ⚠️ HIGH MARINE RISK: ORCA recommends postponing departure off {resolved_name}")
+            lines.append(f"### HIGH MARINE RISK: ORCA recommends postponing departure off {resolved_name}")
             lines.append(f"Offshore conditions off **{resolved_name}** exceed operational safety thresholds. Elevated breaking surf and gale gusts present high capsizing risk.")
         elif risk_level == "LOW":
-            lines.append(f"### ✅ LOW MARINE RISK: Conditions are favorable for departure off {resolved_name}")
+            lines.append(f"### LOW MARINE RISK: Conditions are favorable for departure off {resolved_name}")
             lines.append(f"Sea state and meteorological indicators off **{resolved_name}** are calm and within safe operating limits for both artisanal and mechanized vessels.")
         else:
-            lines.append(f"### ⚠️ MODERATE MARINE RISK: Exercise caution offshore off {resolved_name}")
+            lines.append(f"### MODERATE MARINE RISK: Exercise caution offshore off {resolved_name}")
             lines.append(f"Marginal sea conditions detected off **{resolved_name}**. Small artisanal craft should postpone departure or stay within protected nearshore waters; mechanized vessels may proceed with continuous vigilance.")
 
-        lines.append("\n#### 🌊 Why (Contributing Risk Factors & Physical Hazards):")
+        lines.append("\n#### Why (Contributing Risk Factors & Physical Hazards):")
         if factors:
             for f in factors:
                 lines.append(f"- {f}")
@@ -347,7 +347,7 @@ class LLMClient:
         conf_pct = int(conf * 100) if conf <= 1.0 else int(conf)
         sources = verification.get("sources", ["INCOIS", "IMD", "ISRO-MOSDAC"])
         data_status = verification.get("data_status", "FORECAST")
-        lines.append("\n#### 📊 Transparent Metrics & Grounding:")
+        lines.append("\n#### Transparent Metrics & Grounding:")
         lines.append(f"- **Risk Score:** **{risk_score}/100 ({risk_level})**")
         lines.append(f"- **Evidence Confidence:** **{conf_pct}% multi-source verification consensus**")
         lines.append(f"- **Authoritative Sources:** {', '.join(sources)}")
@@ -359,26 +359,26 @@ class LLMClient:
             alt_time = what_if.get("alternative_time", "11:00")
             alt_risk = what_if.get("alternative_risk_score", 22)
             verdict = what_if.get("verdict", "Significant safety improvement.")
-            lines.append("\n#### ⏰ What-If Departure Comparison:")
+            lines.append("\n#### What-If Departure Comparison:")
             lines.append(f"- **Original Window ({orig_time}):** Risk Score **{orig_risk}/100** ({what_if.get('original_risk_level', 'HIGH')})")
             lines.append(f"- **Alternative Window ({alt_time}):** Risk Score **{alt_risk}/100** ({what_if.get('alternative_risk_level', 'LOW')})")
             lines.append(f"- **Actionable Verdict:** {verdict}")
 
         pfz_adv = ocean.get("pfz_advisory")
         if pfz_adv:
-            lines.append("\n#### 🐟 Authoritative INCOIS PFZ Advisory:")
+            lines.append("\n#### Authoritative INCOIS PFZ Advisory:")
             lines.append(f"- **Reference Landing Center:** {pfz_adv.get('landing_center', 'Sector Port')}")
             lines.append(f"- **Bearing & Distance:** {pfz_adv.get('bearing_deg', 250)}° at {pfz_adv.get('distance_km', 18.0)} km offshore")
             lines.append(f"- **Target Depth Band:** {pfz_adv.get('depth_m', 35)} m")
         elif ocean.get("sst_celsius"):
             sst = ocean.get("sst_celsius")
             chla = ocean.get("chlorophyll_mg_m3", 0.8)
-            lines.append("\n#### 🌊 Oceanographic Front Analysis (PFZ-Aware):")
+            lines.append("\n#### Oceanographic Front Analysis (PFZ-Aware):")
             lines.append(f"- **Sea Surface Temperature (SST):** {sst}°C")
             lines.append(f"- **Chlorophyll-a Concentration:** {chla} mg/m³")
 
         if geo.get("geofence_warning"):
-            lines.append(f"\n#### 🛡️ Marine Protected Area Notice:\n- {geo['geofence_warning']}")
+            lines.append(f"\n#### Marine Protected Area Notice:\n- {geo['geofence_warning']}")
 
         return "\n".join(lines)
 

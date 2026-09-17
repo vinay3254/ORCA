@@ -324,6 +324,8 @@ export interface PromptInputProps {
   value?: string;
   onChange?: (value: string) => void;
   maxAttachments?: number;
+  /** BCP-47 language for speech recognition, e.g. "hi-IN". Defaults to "en-US". */
+  lang?: string;
 }
 
 export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
@@ -338,6 +340,7 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
       value: controlledValue,
       onChange,
       maxAttachments = 6,
+      lang = "en-US",
     },
     ref
   ) => {
@@ -509,6 +512,7 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
           const recognition = new SpeechRecognition();
           recognition.continuous = true;
           recognition.interimResults = true;
+          recognition.lang = lang;
 
           let baseline = valueRef.current;
 
@@ -553,7 +557,7 @@ export const PromptInput = React.forwardRef<HTMLDivElement, PromptInputProps>(
         }, 100);
         simulateText();
       }
-    }, [handleValueChange, stopRecording]);
+    }, [handleValueChange, stopRecording, lang]);
 
     // Keep textarea auto-scrolled to bottom while recording
     useEffect(() => {
