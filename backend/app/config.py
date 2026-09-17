@@ -1,6 +1,8 @@
-# backend/app/config.py
+import json
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 _BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -31,7 +33,22 @@ class Settings(BaseSettings):
             self.ollama_api_key_7,
         ]
         return [k.strip() for k in keys if k and k.strip()]
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
+    cors_origins: str | list[str] = ["http://localhost:3000", "http://localhost:3001"]
+
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("[") and v.endswith("]"):
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        elif isinstance(v, (list, tuple)):
+            return list(v)
+        return ["http://localhost:3000", "http://localhost:3001"]
     # Insecure fixed default for local/demo use only -- set JWT_SECRET in any
     # real deployment, or anyone can forge a valid login token.
     jwt_secret: str = "orca-dev-secret-change-me-before-any-real-deployment"

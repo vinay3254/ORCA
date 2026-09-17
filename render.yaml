@@ -1,0 +1,50 @@
+services:
+  # ORCA Backend (FastAPI + LangGraph + Uvicorn)
+  - type: web
+    name: orca-backend
+    runtime: python
+    region: singapore
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.9
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: OLLAMA_API_KEY
+        sync: false
+      - key: STORMGLASS_API_KEY
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: WEATHERSTACK_API_KEY
+        sync: false
+      - key: TOMORROW_API_KEY
+        sync: false
+      - key: MAPBOX_API_KEY
+        sync: false
+      - key: OPENCAGE_API_KEY
+        sync: false
+
+  # ORCA Frontend (Next.js)
+  - type: web
+    name: orca-frontend
+    runtime: node
+    region: singapore
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: NEXT_PUBLIC_BACKEND_URL
+        fromService:
+          type: web
+          name: orca-backend
+          property: host
