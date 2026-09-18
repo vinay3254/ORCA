@@ -51,6 +51,41 @@ export interface WhatIfComparison {
   verdict: string;
 }
 
+export interface AdvisoryZone {
+  zone: string;
+  distance_km: number;
+  lat: number;
+  lon: number;
+  risk_score: number;
+  risk_level: "LOW" | "MODERATE" | "HIGH" | "EXTREME";
+  verdict: "avoid" | "safe";
+  reasons: string[];
+}
+
+export interface ZoneAdvisory {
+  zones: AdvisoryZone[];
+  avoid_zones: AdvisoryZone[];
+  avoid_count: number;
+  safe_count: number;
+}
+
+export interface ScannedRegion {
+  region: string;
+  distance_km: number;
+  lat: number;
+  lon: number;
+  sst_celsius: number | null;
+  chlorophyll_mg_m3: number | null;
+  pfz_likelihood: "high" | "moderate" | "low" | "unknown";
+  reasons: string[];
+}
+
+export interface RegionScan {
+  regions: ScannedRegion[];
+  favorable_regions: ScannedRegion[];
+  favorable_count: number;
+}
+
 export interface TraceEntry {
   agent: string;
   inputs: Record<string, unknown>;
@@ -86,6 +121,8 @@ export interface ChatMessage {
   risk?: RiskAssessment | null;
   verification?: VerificationResult | null;
   what_if?: WhatIfComparison | null;
+  zone_advisory?: ZoneAdvisory | null;
+  region_scan?: RegionScan | null;
   evidence?: MarineParameter[] | null;
   location?: CanonicalLocation | null;
   is_error?: boolean;
@@ -102,6 +139,8 @@ export type ChatStreamEvent =
         risk?: RiskAssessment | null;
         verification?: VerificationResult | null;
         what_if?: WhatIfComparison | null;
+        zone_advisory?: ZoneAdvisory | null;
+        region_scan?: RegionScan | null;
         evidence?: MarineParameter[] | null;
         location?: CanonicalLocation | null;
         response_language?: string | null;

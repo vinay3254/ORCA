@@ -106,6 +106,12 @@ function ChatApp({
   const [pushStatus, setPushStatus] = useState<"idle" | "subscribing" | "subscribed" | "error">("idle");
   // At first, keep just chat and map. Open workflow when chat is input.
   const [workflowOpened, setWorkflowOpened] = useState(false);
+  // Mobile-only: which of the 3 stacked panels is visible (lg+ shows all 3 side by side).
+  const [activeMobileTab, setActiveMobileTab] = useState<"chat" | "workflow" | "map">("chat");
+
+  useEffect(() => {
+    if (!workflowOpened && activeMobileTab === "workflow") setActiveMobileTab("chat");
+  }, [workflowOpened, activeMobileTab]);
 
   async function handleEnablePush() {
     setPushStatus("subscribing");
@@ -189,6 +195,8 @@ function ChatApp({
               risk: event.data.risk,
               verification: event.data.verification,
               what_if: event.data.what_if,
+              zone_advisory: event.data.zone_advisory,
+              region_scan: event.data.region_scan,
               evidence: event.data.evidence,
               location: event.data.location,
               message_type: event.data.risk ? "answer" : undefined,
@@ -354,11 +362,35 @@ function ChatApp({
         </div>
       )}
 
+      {/* ── MOBILE PANEL SWITCHER (hidden lg+, where all 3 panels sit side by side) ── */}
+      <div className="lg:hidden flex items-center gap-1.5 px-3 py-2 bg-white border-b border-slate-200/90 shrink-0 overflow-x-auto">
+        {(
+          [
+            { key: "chat" as const, label: "Chat" },
+            ...(workflowOpened ? [{ key: "workflow" as const, label: "Workflow" }] : []),
+            { key: "map" as const, label: "Map" },
+          ]
+        ).map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveMobileTab(tab.key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors shrink-0 ${
+              activeMobileTab === tab.key
+                ? "bg-slate-900 text-white border-slate-900"
+                : "bg-slate-50 text-slate-600 border-slate-200/90"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* ── MAIN FLUID WORKSPACE: Chatbox (Left) | Workflow Graph (Middle) | Ocean Map (Right) ── */}
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden relative">
         {/* 1. Left Panel: Conversational Intelligence & Chatbox (Slides smoothly to left when workflow opens) */}
         <div
-          className={`h-full border-r border-slate-200/90 flex flex-col min-h-0 bg-white transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          className={`${activeMobileTab === "chat" ? "flex" : "hidden"} lg:flex h-full border-r border-slate-200/90 flex-col min-h-0 bg-white transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             workflowOpened
               ? "w-full lg:w-[30%] lg:min-w-[320px]"
               : "w-full lg:w-[48%] lg:min-w-[420px]"
@@ -374,7 +406,7 @@ function ChatApp({
 
         {/* 2. Middle Panel: Multi-Agent Workflow Topology Graph (Slides into center with silky smooth expansion) */}
         <div
-          className={`h-full flex flex-col min-h-0 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden ${
+          className={`${workflowOpened && activeMobileTab === "workflow" ? "flex" : "hidden"} lg:flex h-full flex-col min-h-0 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden ${
             workflowOpened
               ? "w-full lg:w-[42%] opacity-100 scale-100 translate-x-0 border-r border-slate-200/90 pointer-events-auto"
               : "w-0 lg:w-0 opacity-0 scale-95 -translate-x-6 border-none pointer-events-none"
@@ -388,7 +420,7 @@ function ChatApp({
         </div>
 
         {/* 3. Right Panel: Ocean Map & Marine Sectors (Slides smoothly to right when workflow opens) */}
-        <div className="flex-1 h-full flex flex-col min-h-0 bg-white transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
+        <div className={`${activeMobileTab === "map" ? "flex" : "hidden"} lg:flex flex-1 h-full flex-col min-h-0 bg-white transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]`}>
           <div className="px-3.5 py-2 bg-white border-b border-slate-200/90 flex items-center justify-between text-xs z-10 shadow-2xs shrink-0">
             <div className="flex items-center gap-2">
               <Compass className="w-3.5 h-3.5 text-slate-700" />

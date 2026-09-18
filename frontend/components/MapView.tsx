@@ -1,7 +1,7 @@
 // frontend/components/MapView.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -54,27 +54,46 @@ function MapController({
   route?: RouteWaypoint[];
 }) {
   const map = useMap();
+  const latestRef = useRef({ lat, lon, route });
+  latestRef.current = { lat, lon, route };
+
+  // On mobile the map tab can be CSS-hidden (display:none, zero-size
+  // container) while still mounted -- react-leaflet's internal pixel/LatLng
+  // projection math throws "Invalid LatLng object: (NaN, NaN)" if driven
+  // against a zero-size container, even with perfectly valid lat/lon input.
+  // Skip recentering while hidden and retry once the container regains a
+  // real size (the ResizeObserver below fires when the tab becomes visible).
+  function recenter() {
+    const size = map.getSize();
+    if (size.x === 0 || size.y === 0) return;
+    const { lat, lon, route } = latestRef.current;
+    const validRoute = route && route.length > 0 && route.every((r) => Number.isFinite(r.lat) && Number.isFinite(r.lon));
+    if (validRoute) {
+      const bounds = L.latLngBounds(route!.map((r) => [r.lat, r.lon]));
+      map.fitBounds(bounds, { padding: [35, 35], maxZoom: 12 });
+    } else if (Number.isFinite(lat) && Number.isFinite(lon)) {
+      map.flyTo([lat as number, lon as number], 10, {
+        duration: 1.2,
+        easeLinearity: 0.25,
+      });
+    }
+  }
 
   useEffect(() => {
     const container = map.getContainer();
     if (!container || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver(() => {
       map.invalidateSize();
+      recenter();
     });
     observer.observe(container);
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map]);
 
   useEffect(() => {
-    if (route && route.length > 0) {
-      const bounds = L.latLngBounds(route.map((r) => [r.lat, r.lon]));
-      map.fitBounds(bounds, { padding: [35, 35], maxZoom: 12 });
-    } else if (lat != null && lon != null) {
-      map.flyTo([lat, lon], 10, {
-        duration: 1.2,
-        easeLinearity: 0.25,
-      });
-    }
+    recenter();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lat, lon, route, map]);
 
   return null;
@@ -87,14 +106,15 @@ export function MapView({
   placeName,
   route,
 }: MapViewProps) {
+  const validCoords = Number.isFinite(lat) && Number.isFinite(lon);
   const center: [number, number] =
     route && route.length > 0
       ? [route[0].lat, route[0].lon]
-      : lat != null && lon != null
-      ? [lat, lon]
+      : validCoords
+      ? [lat as number, lon as number]
       : [13.0, 77.0];
 
-  const defaultZoom = lat != null || route ? 9 : 5;
+  const defaultZoom = validCoords || route ? 9 : 5;
 
   return (
     <div className="relative h-full w-full bg-slate-900 overflow-hidden">
@@ -112,7 +132,7 @@ export function MapView({
         />
 
         {/* Active Pinned Sector Marker with Pulsing Ring */}
-        {lat != null && lon != null && !route && (
+        {lat != null && lon != null && Number.isFinite(lat) && Number.isFinite(lon) && !route && (
           <>
             {/* Visual Halo / Pulse Ring */}
             <CircleMarker
@@ -220,7 +240,7 @@ export function MapView({
 
       {/* ── FLOATING HUD LOCATION CONFIRMATION CARD (Apple HIG Style) ── */}
       <div className="absolute bottom-3 left-3 z-[1000] pointer-events-auto">
-        {lat != null && lon != null ? (
+        {lat != null && lon != null && Number.isFinite(lat) && Number.isFinite(lon) ? (
           <div className="px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.08)] flex items-center gap-3 text-xs max-w-sm">
             <div className="w-7 h-7 rounded-xl bg-sky-50 border border-sky-200 text-sky-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
               <MapPin className="w-3.5 h-3.5" />

@@ -96,6 +96,8 @@ class ChatMessage(BaseModel):
     risk: RiskAssessment | dict[str, Any] | None = None
     verification: VerificationResult | dict[str, Any] | None = None
     what_if: WhatIfComparison | dict[str, Any] | None = None
+    zone_advisory: dict[str, Any] | None = None
+    region_scan: dict[str, Any] | None = None
     evidence: list[MarineParameter | dict[str, Any]] | None = None
     location: CanonicalLocation | dict[str, Any] | None = None
 

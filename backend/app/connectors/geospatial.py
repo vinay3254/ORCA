@@ -9,11 +9,16 @@ from app.schemas import ConnectorResult
 DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "snapshots"
 GEOCODE_SNAPSHOT = DATA_DIR / "geocode.json"
 BOUNDARY_SNAPSHOT = DATA_DIR / "nearby_boundary.json"
+MARITIME_BOUNDARY_SNAPSHOT = DATA_DIR / "nearby_maritime_boundary.json"
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 # Marine-relevant protected-area search radius. Wide enough to surface a real
 # nearby MPA/sanctuary for most coastal queries without pulling in the whole country.
 BOUNDARY_SEARCH_RADIUS_M = 100_000
+# International maritime boundaries (EEZ/IMBL lines) are sparse -- OSM only maps
+# the ones with a ratified/negotiated treaty (e.g. India-Sri Lanka, India-Maldives).
+# A wider radius than the protected-area search is needed to find a real one at all.
+MARITIME_BOUNDARY_SEARCH_RADIUS_M = 500_000
 EARTH_RADIUS_KM = 6371.0
 
 
@@ -246,5 +251,48 @@ async def get_nearby_boundary(lat: float, lon: float) -> ConnectorResult:
         source="overpass-osm-protected-areas",
         live_fetch=lambda: _fetch_nearby_boundary_live(lat, lon),
         snapshot_path=BOUNDARY_SNAPSHOT,
+    )
+
+
+async def _fetch_nearby_maritime_boundary_live(lat: float, lon: float) -> dict:
+    query = (
+        f"[out:json][timeout:25];"
+        f'(way["boundary"="maritime"](around:{MARITIME_BOUNDARY_SEARCH_RADIUS_M},{lat},{lon});'
+        f'relation["boundary"="maritime"](around:{MARITIME_BOUNDARY_SEARCH_RADIUS_M},{lat},{lon}););'
+        f"out center tags;"
+    )
+    async with httpx.AsyncClient(
+        timeout=30.0, headers={"User-Agent": "orca-marine-platform/0.1"}
+    ) as client:
+        resp = await client.post(OVERPASS_URL, data={"data": query})
+        resp.raise_for_status()
+        payload = resp.json()
+
+    candidates = []
+    for element in payload.get("elements", []):
+        tags = element.get("tags", {})
+        # Only real international maritime boundary lines (EEZ/IMBL) -- OSM also
+        # tags unrelated leisure areas (e.g. kitesurfing zones) with boundary=maritime.
+        if tags.get("border_type") not in {"eez", "territorial_sea", "imbl"}:
+            continue
+        label = tags.get("name") or tags.get("name:en") or tags.get("description")
+        center = element.get("center")
+        if not label or not center:
+            continue
+        distance_km = _haversine_km(lat, lon, center["lat"], center["lon"])
+        candidates.append((distance_km, label))
+
+    if not candidates:
+        return {"nearest_maritime_boundary": None, "distance_km": None}
+
+    distance_km, label = min(candidates, key=lambda c: c[0])
+    return {"nearest_maritime_boundary": label, "distance_km": round(distance_km, 1)}
+
+
+async def get_nearby_maritime_boundary(lat: float, lon: float) -> ConnectorResult:
+    return await fetch_with_fallback(
+        source="overpass-osm-maritime-boundaries",
+        live_fetch=lambda: _fetch_nearby_maritime_boundary_live(lat, lon),
+        snapshot_path=MARITIME_BOUNDARY_SNAPSHOT,
     )
 

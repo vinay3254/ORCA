@@ -282,3 +282,157 @@ async def test_graph_treats_comma_placeholder_as_no_location(monkeypatch):
     trace_agents = [t.agent for t in result["trace"]]
     assert trace_agents == ["planner", "geospatial", "weather", "risk", "ocean_analytics"]
     assert result["final_answer"] == "It is safe to go out."
+
+
+async def test_graph_runs_zone_advisory_scan_when_message_asks_which_zones_to_avoid(monkeypatch):
+    monkeypatch.setattr(
+        graph_module, "create_plan",
+        AsyncMock(return_value={
+            "intent": "check zones", "place_name": "Kochi",
+            "agents": ["weather", "risk"], "response_language": "English",
+        }),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_geospatial_agent",
+        AsyncMock(return_value=({"lat": 9.9, "lon": 76.2}, _trace("geospatial"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_weather_agent",
+        AsyncMock(return_value=({"wave_height_m": 1.0, "wind_speed_kmh": 10.0}, _trace("weather"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_risk_agent",
+        AsyncMock(return_value=({"verdict": "safe", "reasons": []}, _trace("risk"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_ocean_analytics_agent",
+        AsyncMock(return_value=({"pfz_likelihood": "moderate"}, _trace("ocean_analytics"))),
+    )
+    zone_result = {"zones": [], "avoid_zones": [], "avoid_count": 0, "safe_count": 5}
+    zone_mock = AsyncMock(return_value=(zone_result, _trace("zone_advisory")))
+    monkeypatch.setattr(graph_module, "run_zone_advisory_agent", zone_mock)
+    monkeypatch.setattr(
+        graph_module, "synthesize_answer", AsyncMock(return_value="No zones flagged.")
+    )
+
+    compiled = graph_module.build_graph(client=object())
+    result = await compiled.ainvoke(
+        {"message": "which fishing zones should I avoid near Kochi?", "history": []}
+    )
+
+    zone_mock.assert_awaited_once_with(9.9, 76.2)
+    assert result["zone_advisory_result"] == zone_result
+
+
+async def test_graph_skips_zone_advisory_scan_for_unrelated_message(monkeypatch):
+    monkeypatch.setattr(
+        graph_module, "create_plan",
+        AsyncMock(return_value={
+            "intent": "check safety", "place_name": "Kochi",
+            "agents": ["weather", "risk"], "response_language": "English",
+        }),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_geospatial_agent",
+        AsyncMock(return_value=({"lat": 9.9, "lon": 76.2}, _trace("geospatial"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_weather_agent",
+        AsyncMock(return_value=({"wave_height_m": 1.0, "wind_speed_kmh": 10.0}, _trace("weather"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_risk_agent",
+        AsyncMock(return_value=({"verdict": "safe", "reasons": []}, _trace("risk"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_ocean_analytics_agent",
+        AsyncMock(return_value=({"pfz_likelihood": "moderate"}, _trace("ocean_analytics"))),
+    )
+    zone_mock = AsyncMock()
+    monkeypatch.setattr(graph_module, "run_zone_advisory_agent", zone_mock)
+    monkeypatch.setattr(
+        graph_module, "synthesize_answer", AsyncMock(return_value="It is safe to go out.")
+    )
+
+    compiled = graph_module.build_graph(client=object())
+    result = await compiled.ainvoke({"message": "is it safe near Kochi?", "history": []})
+
+    zone_mock.assert_not_awaited()
+    assert result["zone_advisory_result"] is None
+
+
+async def test_graph_runs_region_scan_when_message_asks_which_regions_favorable(monkeypatch):
+    monkeypatch.setattr(
+        graph_module, "create_plan",
+        AsyncMock(return_value={
+            "intent": "check regions", "place_name": "Kochi",
+            "agents": ["weather", "risk"], "response_language": "English",
+        }),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_geospatial_agent",
+        AsyncMock(return_value=({"lat": 9.9, "lon": 76.2}, _trace("geospatial"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_weather_agent",
+        AsyncMock(return_value=({"wave_height_m": 1.0, "wind_speed_kmh": 10.0}, _trace("weather"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_risk_agent",
+        AsyncMock(return_value=({"verdict": "safe", "reasons": []}, _trace("risk"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_ocean_analytics_agent",
+        AsyncMock(return_value=({"pfz_likelihood": "moderate"}, _trace("ocean_analytics"))),
+    )
+    region_result = {"regions": [], "favorable_regions": [], "favorable_count": 0}
+    region_mock = AsyncMock(return_value=(region_result, _trace("region_scan")))
+    monkeypatch.setattr(graph_module, "run_region_scan_agent", region_mock)
+    monkeypatch.setattr(
+        graph_module, "synthesize_answer", AsyncMock(return_value="No favorable regions nearby.")
+    )
+
+    compiled = graph_module.build_graph(client=object())
+    result = await compiled.ainvoke(
+        {"message": "which regions show high chlorophyll and favourable SST near Kochi?", "history": []}
+    )
+
+    region_mock.assert_awaited_once_with(9.9, 76.2)
+    assert result["region_scan_result"] == region_result
+
+
+async def test_graph_skips_region_scan_for_unrelated_message(monkeypatch):
+    monkeypatch.setattr(
+        graph_module, "create_plan",
+        AsyncMock(return_value={
+            "intent": "check safety", "place_name": "Kochi",
+            "agents": ["weather", "risk"], "response_language": "English",
+        }),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_geospatial_agent",
+        AsyncMock(return_value=({"lat": 9.9, "lon": 76.2}, _trace("geospatial"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_weather_agent",
+        AsyncMock(return_value=({"wave_height_m": 1.0, "wind_speed_kmh": 10.0}, _trace("weather"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_risk_agent",
+        AsyncMock(return_value=({"verdict": "safe", "reasons": []}, _trace("risk"))),
+    )
+    monkeypatch.setattr(
+        graph_module, "run_ocean_analytics_agent",
+        AsyncMock(return_value=({"pfz_likelihood": "moderate"}, _trace("ocean_analytics"))),
+    )
+    region_mock = AsyncMock()
+    monkeypatch.setattr(graph_module, "run_region_scan_agent", region_mock)
+    monkeypatch.setattr(
+        graph_module, "synthesize_answer", AsyncMock(return_value="It is safe to go out.")
+    )
+
+    compiled = graph_module.build_graph(client=object())
+    result = await compiled.ainvoke({"message": "is it safe near Kochi?", "history": []})
+
+    region_mock.assert_not_awaited()
+    assert result["region_scan_result"] is None

@@ -11,6 +11,8 @@ from app.agents.route_agent import run_route_agent
 from app.agents.reporting_agent import synthesize_answer
 from app.agents.verification_agent import audit_marine_evidence
 from app.agents.what_if_agent import run_what_if_agent
+from app.agents.zone_advisory_agent import run_zone_advisory_agent
+from app.agents.region_scan_agent import run_region_scan_agent
 from app.connectors.geospatial import geocode
 from app.schemas import TraceEntry
 
@@ -34,6 +36,8 @@ class GraphState(TypedDict, total=False):
     route_result: dict
     verification_result: dict
     what_if_result: dict
+    zone_advisory_result: dict
+    region_scan_result: dict
     evidence: list[dict[str, Any]]
     trace: list[TraceEntry]
     final_answer: str
@@ -247,6 +251,34 @@ async def reporting_node(state: GraphState) -> GraphState:
         except Exception:
             pass
 
+    # 3. Zone-avoidance scan when the user is asking which zones to avoid
+    is_avoid_zones_query = "lat" in state and "lon" in state and any(
+        kw in msg_lower for kw in ("avoid", "stay away", "which zone", "which fishing zone", "unsafe zone")
+    )
+    zone_advisory_dict = None
+    if is_avoid_zones_query:
+        try:
+            zone_advisory_dict, _ = await run_zone_advisory_agent(state["lat"], state["lon"])
+            agent_results["zone_advisory_result"] = zone_advisory_dict
+        except Exception:
+            pass
+
+    # 4. Regional SST/chlorophyll hotspot scan when the user asks which
+    # regions look favorable, rather than about the single queried point.
+    is_region_scan_query = "lat" in state and "lon" in state and any(
+        kw in msg_lower for kw in (
+            "which region", "which area", "which zone show", "favorable region", "favourable region",
+            "high chlorophyll", "best region", "best area",
+        )
+    )
+    region_scan_dict = None
+    if is_region_scan_query:
+        try:
+            region_scan_dict, _ = await run_region_scan_agent(state["lat"], state["lon"])
+            agent_results["region_scan_result"] = region_scan_dict
+        except Exception:
+            pass
+
     answer = await synthesize_answer(
         state["_client"], state["message"], plan["response_language"], agent_results
     )
@@ -255,6 +287,8 @@ async def reporting_node(state: GraphState) -> GraphState:
         "final_answer": answer,
         "verification_result": verification_dict,
         "what_if_result": what_if_dict,
+        "zone_advisory_result": zone_advisory_dict,
+        "region_scan_result": region_scan_dict,
     }
 
 

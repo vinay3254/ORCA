@@ -4,10 +4,19 @@
 Resolves place names or coordinates to canonical location, computes distance to coastline,
 and checks proximity to marine protected areas and geofences.
 """
-from app.connectors.geospatial import geocode, get_nearby_boundary, compute_coastal_distance, reverse_geocode
+from app.connectors.geospatial import (
+    geocode,
+    get_nearby_boundary,
+    get_nearby_maritime_boundary,
+    compute_coastal_distance,
+    reverse_geocode,
+)
 from app.schemas import TraceEntry
 
 PROXIMITY_WARNING_KM = 5.0
+# International maritime boundaries (EEZ/IMBL) matter well before a vessel is
+# on top of them -- warn from much further out than a protected-area sanctuary.
+MARITIME_BOUNDARY_WARNING_KM = 20.0
 
 
 async def run_geospatial_agent(
@@ -52,6 +61,18 @@ async def run_geospatial_agent(
         fetched_at = boundary_result.fetched_at
     is_cached = is_cached or boundary_result.is_cached
 
+    # Check proximity to an international maritime boundary (EEZ/IMBL line)
+    maritime_result = await get_nearby_maritime_boundary(lat, lon)
+    maritime_distance_km = maritime_result.data.get("distance_km")
+    within_maritime_warning_zone = (
+        maritime_distance_km is not None and maritime_distance_km <= MARITIME_BOUNDARY_WARNING_KM
+    )
+
+    sources.append(maritime_result.source)
+    if maritime_result.fetched_at and (fetched_at is None or maritime_result.fetched_at > fetched_at):
+        fetched_at = maritime_result.fetched_at
+    is_cached = is_cached or maritime_result.is_cached
+
     output = {
         "lat": lat,
         "lon": lon,
@@ -59,6 +80,9 @@ async def run_geospatial_agent(
         "nearest_boundary": boundary_result.data.get("nearest_boundary"),
         "boundary_distance_km": distance_km,
         "within_warning_zone": within_warning_zone,
+        "nearest_maritime_boundary": maritime_result.data.get("nearest_maritime_boundary"),
+        "maritime_boundary_distance_km": maritime_distance_km,
+        "within_maritime_warning_zone": within_maritime_warning_zone,
         "distance_to_coast_km": coastal["distance_to_coast_km"],
         "is_offshore": coastal["is_offshore"],
         "nearest_coastal_name": coastal["nearest_coastal_name"],
@@ -72,6 +96,13 @@ async def run_geospatial_agent(
         output["geofence_warning"] = (
             f"Within {distance_km}km of {boundary_result.data['nearest_boundary']} "
             "-- check local marine protected area / boundary regulations before entering."
+        )
+
+    if within_maritime_warning_zone:
+        output["maritime_boundary_warning"] = (
+            f"Within {maritime_distance_km}km of the {maritime_result.data['nearest_maritime_boundary']} -- "
+            "crossing into another country's EEZ/territorial waters without authorization is a serious "
+            "legal risk. Verify position before proceeding further."
         )
 
     if coords is None and is_cached:

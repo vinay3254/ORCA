@@ -64,6 +64,8 @@ async def run_risk_agent(
         lightning_alerts=alerts_data["lightning_alerts"],
         within_warning_zone=geo.get("within_warning_zone", False) if geo else False,
         boundary_name=geo.get("nearest_boundary") if geo else None,
+        within_maritime_warning_zone=geo.get("within_maritime_warning_zone", False) if geo else False,
+        maritime_boundary_name=geo.get("nearest_maritime_boundary") if geo else None,
         target_time=weather.get("forecast_time"),
     )
 

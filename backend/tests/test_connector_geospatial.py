@@ -77,3 +77,56 @@ async def test_get_nearby_boundary_falls_back_on_failure():
     result = await geospatial.get_nearby_boundary(9.9679, 76.2444)
     assert result.is_cached is True
     assert result.data["nearest_boundary"] is not None
+
+
+@respx.mock
+async def test_get_nearby_maritime_boundary_picks_nearest_eez_line():
+    respx.post("https://overpass-api.de/api/interpreter").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "elements": [
+                    {
+                        "type": "way", "id": 1,
+                        "center": {"lat": 6.4392, "lon": 73.3118},
+                        "tags": {"boundary": "maritime", "border_type": "eez", "description": "Maldives-India maritime boundary"},
+                    },
+                    {
+                        "type": "way", "id": 2,
+                        "center": {"lat": 8.9, "lon": 78.0},
+                        "tags": {"boundary": "maritime", "border_type": "eez", "description": "Sri Lanka-India maritime boundary"},
+                    },
+                    {
+                        # Real OSM boundary=maritime tag also covers unrelated leisure
+                        # areas (kitesurfing zones) -- must be excluded, no border_type.
+                        "type": "way", "id": 3,
+                        "center": {"lat": 9.93, "lon": 76.27},
+                        "tags": {"boundary": "maritime", "leisure": "swimming_area", "name:en": "Kitesurfing Area"},
+                    },
+                ]
+            },
+        )
+    )
+    result = await geospatial.get_nearby_maritime_boundary(9.93, 76.27)
+    assert result.is_cached is False
+    assert result.data["nearest_maritime_boundary"] == "Sri Lanka-India maritime boundary"
+    assert result.data["distance_km"] > 0
+
+
+@respx.mock
+async def test_get_nearby_maritime_boundary_returns_none_when_nothing_in_radius():
+    respx.post("https://overpass-api.de/api/interpreter").mock(
+        return_value=httpx.Response(200, json={"elements": []})
+    )
+    result = await geospatial.get_nearby_maritime_boundary(20.0, 85.0)
+    assert result.is_cached is False
+    assert result.data["nearest_maritime_boundary"] is None
+    assert result.data["distance_km"] is None
+
+
+@respx.mock
+async def test_get_nearby_maritime_boundary_falls_back_on_failure():
+    respx.post("https://overpass-api.de/api/interpreter").mock(side_effect=httpx.ConnectError("boom"))
+    result = await geospatial.get_nearby_maritime_boundary(9.93, 76.27)
+    assert result.is_cached is True
+    assert result.data["nearest_maritime_boundary"] is not None

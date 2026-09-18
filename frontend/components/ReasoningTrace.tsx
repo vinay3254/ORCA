@@ -268,6 +268,14 @@ export function ReasoningTrace({
                   </div>
                 )}
 
+                {/* International Maritime Boundary (EEZ/IMBL) Callout */}
+                {entry.output["maritime_boundary_warning"] != null && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 font-medium text-[11px] flex items-start gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                    <span>{String(entry.output["maritime_boundary_warning"])}</span>
+                  </div>
+                )}
+
                 {/* Tide Data Callout for Weather Agent */}
                 {entry.agent === "weather" && entry.output["tide_height_m"] != null && (
                   <div className="p-2.5 rounded-xl bg-sky-50 border border-sky-200 text-sky-950 text-[11px] space-y-1">

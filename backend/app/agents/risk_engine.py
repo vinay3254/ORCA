@@ -32,6 +32,8 @@ def calculate_risk(
     lightning_alerts: list[dict] | None = None,
     within_warning_zone: bool = False,
     boundary_name: str | None = None,
+    within_maritime_warning_zone: bool = False,
+    maritime_boundary_name: str | None = None,
     target_time: str | None = None,
 ) -> RiskAssessment:
     """Computes transparent, explainable marine risk score (0-100)."""
@@ -115,6 +117,12 @@ def calculate_risk(
     if within_warning_zone and boundary_name:
         score += 5.0
         factors.append(f"Near marine protected boundary: {boundary_name} (+5)")
+
+    # 8. International Maritime Boundary (EEZ/IMBL) proximity -- weighted higher
+    # than an MPA notice since crossing it is a legal, not just ecological, risk.
+    if within_maritime_warning_zone and maritime_boundary_name:
+        score += 15.0
+        factors.append(f"Near international maritime boundary: {maritime_boundary_name} (+15)")
 
     # Clamp score to [0, 100]
     final_score = int(min(100, max(0, round(score))))

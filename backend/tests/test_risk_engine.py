@@ -58,3 +58,22 @@ def test_calculate_risk_moderate_calmer_window():
     )
     assert res.risk_level == "MODERATE" or res.risk_score < 60
     assert res.risk_score < 50
+
+
+def test_calculate_risk_near_maritime_boundary_adds_penalty_and_factor():
+    baseline = calculate_risk(wave_height_m=0.8, wind_speed_kmh=12.0)
+    near_boundary = calculate_risk(
+        wave_height_m=0.8,
+        wind_speed_kmh=12.0,
+        within_maritime_warning_zone=True,
+        maritime_boundary_name="Sri Lanka-India maritime boundary",
+    )
+    assert near_boundary.risk_score == baseline.risk_score + 15
+    assert any("international maritime boundary" in f.lower() for f in near_boundary.factors)
+
+
+def test_calculate_risk_ignores_maritime_flag_without_boundary_name():
+    baseline = calculate_risk(wave_height_m=0.8, wind_speed_kmh=12.0)
+    res = calculate_risk(wave_height_m=0.8, wind_speed_kmh=12.0, within_maritime_warning_zone=True)
+    assert res.risk_score == baseline.risk_score
+    assert not any("maritime boundary" in f.lower() for f in res.factors)

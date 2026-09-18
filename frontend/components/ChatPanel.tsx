@@ -4,6 +4,8 @@ import { Waves, MapPin, AlertTriangle, Check, Fish, Clock, Zap, Compass, Chevron
 import { ChatMessage, TraceEntry } from "@/lib/types";
 import { RecommendationHero } from "./RecommendationHero";
 import { WhatIfCard } from "./WhatIfCard";
+import { ZoneAdvisoryCard } from "./ZoneAdvisoryCard";
+import { RegionScanCard } from "./RegionScanCard";
 import { EvidencePanel } from "./EvidencePanel";
 import { MarkdownContent } from "./MarkdownContent";
 import { PromptInput } from "./ui/ai-chat-input";
@@ -306,6 +308,12 @@ export function ChatPanel({
 
               {/* 2. WHAT-IF DEPARTURE COMPARISON */}
               {m.what_if && <WhatIfCard comparison={m.what_if} />}
+
+              {/* 2b. NEARBY ZONE AVOIDANCE ADVISORY */}
+              {m.zone_advisory && <ZoneAdvisoryCard advisory={m.zone_advisory} />}
+
+              {/* 2c. REGIONAL PFZ HOTSPOT SCAN */}
+              {m.region_scan && <RegionScanCard scan={m.region_scan} />}
 
               {/* 3. VISUALLY DIFFERENTIATED MESSAGE CARDS */}
               {kind === "clarification" && (

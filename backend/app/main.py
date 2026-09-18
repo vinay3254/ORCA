@@ -187,6 +187,8 @@ async def chat(request: ChatRequest, user: dict = Depends(_current_user)):
                     "risk": state.get("risk_result"),
                     "verification": state.get("verification_result"),
                     "what_if": state.get("what_if_result"),
+                    "zone_advisory": state.get("zone_advisory_result"),
+                    "region_scan": state.get("region_scan_result"),
                     "evidence": state.get("evidence"),
                     "location": state.get("canonical_location"),
                     "response_language": state.get("plan", {}).get("response_language"),

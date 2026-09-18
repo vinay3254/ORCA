@@ -380,6 +380,9 @@ class LLMClient:
         if geo.get("geofence_warning"):
             lines.append(f"\n#### Marine Protected Area Notice:\n- {geo['geofence_warning']}")
 
+        if geo.get("maritime_boundary_warning"):
+            lines.append(f"\n#### International Maritime Boundary Notice:\n- {geo['maritime_boundary_warning']}")
+
         return "\n".join(lines)
 
 
